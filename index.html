@@ -1,0 +1,85 @@
+<html>
+<style>
+body {
+  background-color: #f0f0f0;
+  font-family: Courier;
+}
+h1 {
+  font-size: 14pt;
+  color: #000;
+}
+h2 {
+  font-size: 10pt;
+  color: #330;
+}
+#framerate {
+ font-size: 10pt;
+}
+#pause_button {
+  background-color: #f8ce90;
+  font-size: 10pt;
+  border-radius: 8px;
+  padding: 0.5em 3em;
+  margin: 0.5em;
+}
+.page {
+  text-align: center;
+  margin: 0 auto;
+  padding: 0.2em;
+}
+.footer {
+  font-size: 10pt;
+  font-family: Courier;
+  color: #880;
+}
+.footer a {
+  color: #840;
+}
+.footer a:hover {
+  color: #a00;
+  font-weight: bold;
+}
+</style>
+<title>BitWorld</title>
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-22494981-1']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+<body>
+<div class="page">
+  <h1>BitWorld</h1>
+  <canvas id="canvas" style="image-rendering:pixelated; background-color: orange;" />
+</div>
+<div class="page">
+  <h2>Use arrow keys to move and 'A' and 'S' to attack</h2>
+  <input type="submit" id="pause_button" value="Pause" onclick="DidTapPause();" />
+  <div id="framerate">5 fps</div>
+  <input type="range" id="range" value="5" min="1" max="30" step="1" onchange="DidChangeFramerate();"/>
+  <div class="footer" style="padding-top:1em;">
+  </div>
+</div>
+</body>
+<script src="./game.js"></script>
+<script src="./renderer.js"></script>
+<script src="./imageloader.js"></script>
+<script src="./keyboard.js"></script>
+<script>
+  var canvas = document.getElementById("canvas")
+  canvas.width = 320
+  canvas.height = 240
+  canvas.style.width = '600px'
+  canvas.style.height = '400px'
+
+  window.addEventListener('keydown', HandleKeyDown, true)
+  window.addEventListener('keyup', HandleKeyUp, true)
+
+  StartGame()
+</script>
+</html>
+
