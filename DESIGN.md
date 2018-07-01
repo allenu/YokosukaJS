@@ -1,4 +1,7 @@
 
+Elm-style definitions for the state transformations:
+
+
 -- Get the next director states
 f_directors : Time -> UserInput -> [Director] -> [Actor] -> World -> Time -> [Director]
 

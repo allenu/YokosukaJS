@@ -31,20 +31,20 @@ function LoadImagePromise(image_path) {
 // 
 function LoadImageLookupWithPathsPromise(image_paths) {
     return new Promise( (fulfill, reject) => {
-	var loadImagePromises = image_paths.map( (image_path) => { return LoadImagePromise(image_path) } )
+        let loadImagePromises = image_paths.map( (image_path) => { return LoadImagePromise(image_path) } )
 
-	Promise.all(loadImagePromises).then( (images) => {
-	    var image_lookup = images.reduce( (acc, image) => { 
-		if (image.image != null) {
-		    //console.log("loading image " + image.image_path)
-		}
-		var acc_copy = acc
-		acc_copy[image.image_path] = image.image
-		return acc_copy }, {} )
+        Promise.all(loadImagePromises).then( (images) => {
+            var image_lookup = images.reduce( (acc, image) => { 
+            if (image.image != null) {
+                //console.log("loading image " + image.image_path)
+            }
+            let acc_copy = acc
+            acc_copy[image.image_path] = image.image
+            return acc_copy }, {} )
 
-	    fulfill(image_lookup)
-	}, () => {
-	    reject()
-	})
+            fulfill(image_lookup)
+        }, () => {
+            reject()
+        })
     })
 }

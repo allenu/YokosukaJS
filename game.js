@@ -16,26 +16,26 @@ function CreateWorld() {
     let actors = [
         {
             id: "npc_1",
-            type: "npc",
+            actor_type: "npc",
             model: "alex",
             director: "bot_1",
-            position: {x: 64, y: 64},
+            position: {x: 4, y: 48},
             flipped: true,
             enabled: true
         },
         {
             id: "pc",
-            type: "player",
+            actor_type: "player",
             model: "alex",
             director: "user_1",
-            position: {x: 32, y: 64},
+            position: {x: 4, y: 4},
             flipped: false,
-            enabled: true
+            enabled: true,
         },
         // Note: this character is not immediately enabled. This is triggered once character moves past a certain line.
         {
             id: "npc_2",
-            type: "npc",
+            actor_type: "npc",
             model: "alex",
             director: "bot_2",
             position: {x: 320 + 32, y: 64},
@@ -47,7 +47,7 @@ function CreateWorld() {
         // At first, disallow user from crossing x==320
         {
             id: "boundary_1",
-            type: "vertical",
+            boundary_type: "vertical",
             x: 320,
             enabled: true
         }
@@ -56,14 +56,14 @@ function CreateWorld() {
         // When npc_1 defeated, cause boundary to disappear
         {
             id: "npc_1_died",
-            type: "npc_death",
+            trigger_type: "npc_death",
             npc_id: "npc_1",
             fired: false
         },
         // When player crosses x=320, then enable actor npc_2
         {
             id: "crossed_line",
-            type: "left_right_cross",
+            trigger_type: "left_right_cross",
             x: 320,
             fired: false
         },
@@ -76,7 +76,7 @@ function CreateWorld() {
             id: "turn_off_boundary",
             trigger: "npc_1_died",
             command: {
-                type: "boundary",
+                command_type: "boundary",
                 boundary_id: "boundary_1",
                 enable: false
             },
@@ -85,7 +85,7 @@ function CreateWorld() {
             id: "enable_npc_2",
             trigger: "crossed_line",
             command: {
-                type: "enable_actor",
+                command_type: "enable_actor",
                 actor_id: "npc_2"
             },
         }
@@ -110,8 +110,9 @@ function CreateInitialDirectorsFromWorld(world) {
     let directors = world.actors.filter( actor => { return actor.enabled } )
         .map( actor => {
             return {
-                type: actor.director,
-                id: actor.id
+                director_type: actor.director,
+                id: actor.id,
+                directions: []
             }
         })
 
@@ -122,12 +123,55 @@ function f_Directors(frame_num, world_map, user_input, actors, directors) {
     let new_directors = [...directors]
 
     // Update directors based on world state and type of director...
+    new_directors.forEach( (director) => {
+        if (director.director_type == "user_1") {
+            let directions = []
+            if (user_input.left) {
+                directions.push("left")
+            }
+            if (user_input.right) {
+                directions.push("right")
+            }
+            if (user_input.up) {
+                directions.push("up")
+            }
+            if (user_input.down) {
+                directions.push("down")
+            }
+            director.directions = directions
+        }
+    })
 
     return new_directors
 }
 
 function f_Actors(frame_num, world_map, directors, actors) {
     let new_actors = [...actors]
+
+    new_actors.forEach( actor => {
+        let directions = []
+        directors.forEach( director => {
+            if (director.id == actor.id) {
+                directions = director.directions
+            }
+        })
+
+        // TODO: Take action on actor based on direction.
+        // TODO: We'd incorporate physics and boundary stuff here...
+        if (directions[0] == "left") {
+            actor.position.x -= 10
+        }
+        if (directions[0] == "right") {
+            actor.position.x += 10
+        }
+        if (directions[0] == "down") {
+            actor.position.y += 10
+        }
+        if (directions[0] == "up") {
+            actor.position.y -= 10
+        }
+    })
+
     return new_actors
 }
 
@@ -176,7 +220,6 @@ function StartGame() {
     ]
 
     LoadResources(resource_list).then( (resources) => {
-        console.log(resources)
         let world = CreateWorld()
         let directors = CreateInitialDirectorsFromWorld(world)
         state = {
@@ -186,7 +229,7 @@ function StartGame() {
             directors: directors,
             user_input: {},
             triggers_fired: [],
-            frame_rate: 1.0
+            frame_rate: 5.0
         }
 
         Tick()
@@ -196,7 +239,7 @@ function StartGame() {
 }
 
 function Tick() {
-    let user_input = GetKeyState
+    let user_input = GetKeyState()
     state = f_State(state, user_input)
 
     console.log("Tick. " + state.frame_num) 
@@ -210,7 +253,7 @@ function Tick() {
 }
 
 function f_State(state, user_input) {
-    var new_state = ShallowCopyOfObject(state)
+    var new_state = {...state}
     new_state.frame_num += 1
     new_state.user_input = user_input
 
@@ -232,24 +275,17 @@ function f_State(state, user_input) {
 }
 
 function f_SpritesFromState(state) {
-    let sprites = state.world.actors.map( actor => {
-        let image = state.resources["images/punching1.png"]
-        return {
-            image: image, 
-            src_position: actor.position, 
-            src_size: {width: 48, height: 81},
-            flip: actor.flipped,
-            position: actor.position,
-            scale: 2.0
-        }
-    })
+    let sprites = state.world.actors.filter( actor => { return actor.enabled } )
+        .map( actor => {
+            let image = state.resources["images/punching1.png"]
+            return {
+                image: image, 
+                src_position: {x: 0, y: 0}, 
+                src_size: {width: 48, height: 81},
+                flip: actor.flipped,
+                position: actor.position,
+                scale: 1.0
+            }
+        })
     return sprites
-}
-
-function ShallowCopyOfObject(object) {
-    var returnObject = {}
-    for (var k in object) {
-	    returnObject[k] = object[k]
-    }
-    return returnObject
 }
