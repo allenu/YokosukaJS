@@ -191,27 +191,6 @@ function f_Triggers(triggers, triggers_fired) {
     return new_triggers
 }
 
-function LoadResources(list) {
-    // TODO: Don't just assume all resources in the list are image filenames
-    return new Promise( (fulfill, reject) => {
-        var loadImagePromises = list.map( (image_path) => { return LoadImagePromise(image_path) } )
-
-        Promise.all(loadImagePromises).then( (images) => {
-            var image_lookup = images.reduce( (acc, image) => { 
-            if (image.image != null) {
-                //console.log("loading image " + image.image_path)
-            }
-            var acc_copy = acc
-            acc_copy[image.image_path] = image.image
-            return acc_copy }, {} )
-
-            fulfill(image_lookup)
-        }, () => {
-            reject()
-        })
-    })
-}
-
 function StartGame() {
     let resource_list = [
         "images/rivercity-school.gif",
