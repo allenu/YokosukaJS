@@ -5,10 +5,10 @@ function LoadResources(list) {
             return fetch(path, { method: "GET", credentials: "include" })
                         .then( response => {
                             if (path.toLowerCase().endsWith(".yaml")) {
-                                // TODO: extract as yaml
                                 return response.text().then( text => {
+                                    var yamlobj = jsyaml.load(text)
                                     return new Promise( (fulfill, reject) => {
-                                        fulfill({ filename: path, data: text })
+                                        fulfill({ filename: path, data: yamlobj })
                                     }, () => {reject()})
                                 })
                             } else if (path.toLowerCase().endsWith(".json")) {
