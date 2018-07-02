@@ -17,29 +17,41 @@ function CreateWorld() {
         {
             id: "npc_1",
             actor_type: "npc",
-            model: "alex",
+            model: "resources/model.yaml",
+            sprites: "images/ryan.png",
+            spritesheet: "resources/spritesheet.json",
+            state_name: "standing",
+            frame_index: 0,
             director: "bot_1",
-            position: {x: 4, y: 48},
-            flipped: true,
+            position: {x: 128, y: 96},
+            facing_left: true,
             enabled: true
         },
         {
             id: "pc",
             actor_type: "player",
-            model: "alex",
+            model: "resources/model.yaml",
+            sprites: "images/alex.png",
+            spritesheet: "resources/spritesheet.json",
+            state_name: "standing",
+            frame_index: 0,
             director: "user_1",
-            position: {x: 4, y: 4},
-            flipped: false,
+            position: {x: 64, y: 128},
+            facing_left: false,
             enabled: true,
         },
         // Note: this character is not immediately enabled. This is triggered once character moves past a certain line.
         {
             id: "npc_2",
             actor_type: "npc",
-            model: "alex",
+            model: "resources/model.yaml",
+            sprites: "images/ryan.png",
+            spritesheet: "resources/spritesheet.json",
+            state_name: "standing",
+            frame_index: 0,
             director: "bot_2",
             position: {x: 320 + 32, y: 64},
-            flipped: true,
+            facing_left: true,
             enabled: false
         },
     ]
@@ -120,23 +132,51 @@ function CreateInitialDirectorsFromWorld(world) {
 }
 
 function f_Directors(frame_num, world_map, user_input, actors, directors) {
-    let new_directors = [...directors]
+    let new_directors = directors.map( director => { return {...director} } )
 
     // Update directors based on world state and type of director...
     new_directors.forEach( (director) => {
+        let actor = actors.find( actor => { return actor.id == director.id } )
+        let facing_left = actor.facing_left
+
         if (director.director_type == "user_1") {
             let directions = []
+            if (user_input.a_key) {
+                directions.push("punch")
+            }
+            if (user_input.s_key) {
+                directions.push("kick")
+            }
             if (user_input.left) {
-                directions.push("left")
-            }
-            if (user_input.right) {
-                directions.push("right")
-            }
-            if (user_input.up) {
-                directions.push("up")
-            }
-            if (user_input.down) {
+                if (facing_left == true) {
+                    if (user_input.down) {
+                        directions.push("forward_down")
+                    } else if (user_input.up) {
+                        directions.push("forward_up")
+                    } else {
+                        directions.push("forward")
+                    }
+                } else {
+                    directions.push("backward")
+                }
+            } else if (user_input.right) {
+                if (facing_left == true) {
+                    directions.push("backward")
+                } else {
+                    if (user_input.down) {
+                        directions.push("forward_down")
+                    } else if (user_input.up) {
+                        directions.push("forward_up")
+                    } else {
+                        directions.push("forward")
+                    }
+                }
+            } else if (user_input.down) {
+                // Just hitting down
                 directions.push("down")
+            } else if (user_input.up) {
+                // Just hitting up
+                directions.push("up")
             }
             director.directions = directions
         }
@@ -145,8 +185,19 @@ function f_Directors(frame_num, world_map, user_input, actors, directors) {
     return new_directors
 }
 
-function f_Actors(frame_num, world_map, directors, actors) {
-    let new_actors = [...actors]
+function f_Actors(frame_num, world_map, directors, actors, resources) {
+    let new_actors = actors.map( actor => {
+        let directions = []
+        directors.forEach( director => {
+            if (director.id == actor.id) {
+                directions = director.directions
+            }
+        })
+
+        let model = resources[actor.model]
+        let new_actor = NextActorState(model, actor, directions)
+        return new_actor
+    })
 
     new_actors.forEach( actor => {
         let directions = []
@@ -155,21 +206,6 @@ function f_Actors(frame_num, world_map, directors, actors) {
                 directions = director.directions
             }
         })
-
-        // TODO: Take action on actor based on direction.
-        // TODO: We'd incorporate physics and boundary stuff here...
-        if (directions[0] == "left") {
-            actor.position.x -= 10
-        }
-        if (directions[0] == "right") {
-            actor.position.x += 10
-        }
-        if (directions[0] == "down") {
-            actor.position.y += 10
-        }
-        if (directions[0] == "up") {
-            actor.position.y -= 10
-        }
     })
 
     return new_actors
@@ -193,9 +229,11 @@ function f_Triggers(triggers, triggers_fired) {
 
 function StartGame() {
     let resource_list = [
+        "resources/model.yaml",
+        "resources/spritesheet.json",
         "images/rivercity-school.gif",
-        "images/punching1.png",
-        "images/punching2.png",
+        "images/alex.png",
+        "images/ryan.png",
     ]
 
     LoadResources(resource_list).then( (resources) => {
@@ -218,13 +256,16 @@ function StartGame() {
 
 function Tick() {
     if (!g_paused) {
-        let user_input = GetKeyState()
+        let user_input = {...GetKeyState()}
         state = f_State(state, user_input)
 
         console.log("Tick. " + state.frame_num) 
+        console.log(state)
 
-        const sprites = f_SpritesFromState(state)
-        RenderSprites(g_canvas, sprites)
+        let sprites = f_SpritesFromState(state)
+        let preprocessed_sprites = PreprocessedSprites(sprites, state.resources)
+
+        RenderSprites(g_canvas, preprocessed_sprites)
     }
 
 	// Set up next tick call
@@ -236,6 +277,7 @@ function f_State(state, user_input) {
     var new_state = {...state}
     new_state.frame_num += 1
     new_state.user_input = user_input
+    new_state.world = {...state.world}
 
     // TODO:
     // - execute scripts based on triggers fired
@@ -246,7 +288,8 @@ function f_State(state, user_input) {
     // - remove directors eliminated last round
     
     new_state.directors = f_Directors(new_state.frame_num, state.world.map, new_state.user_input, state.world.actors, state.directors)
-    new_state.world.actors = f_Actors(new_state.frame_num, state.world.map, new_state.directors, state.world.actors)
+    // TODO: decouple directions from each director and filter them through the system rules here
+    new_state.world.actors = f_Actors(new_state.frame_num, state.world.map, new_state.directors, state.world.actors, state.resources)
 
     new_state.world.triggers = f_Triggers(state.world.triggers, state.triggers_fired)
     new_state.triggers_fired = f_TriggersFired(state.world.actors, new_state.world.actors, state.world.triggers)
@@ -257,15 +300,82 @@ function f_State(state, user_input) {
 function f_SpritesFromState(state) {
     let sprites = state.world.actors.filter( actor => { return actor.enabled } )
         .map( actor => {
-            let image = state.resources["images/punching1.png"]
-            return {
-                image: image, 
-                src_position: {x: 0, y: 0}, 
-                src_size: {width: 48, height: 81},
-                flip: actor.flipped,
-                position: actor.position,
-                scale: 1.0
+            let model = state.resources[actor.model]
+
+            let animation_state = model.states[actor.state_name]
+            if (!animation_state) {
+                console.log("animation state not found: " + actor.state_name)
+            }
+            var animation_frame = animation_state.frames[actor.frame_index]
+            if (!animation_frame) {
+                console.log("animation frame not found: " + actor.frame_index)
+            }
+
+            let sprite_name = animation_frame.sprite
+            let flip = actor.facing_left
+            let position = actor.position
+
+	        return {
+                image: actor.sprites,
+                spritesheet: actor.spritesheet, 
+                sprite_name: sprite_name,
+                flip: flip,
+                position: position
             }
         })
     return sprites
 }
+
+function PreprocessedSprites(sprites, resources) {
+    // Sprites we get from f_SpritesFromState is just info about which sprite
+    // to draw and where in the world map we want it. We need to cull this set
+    // of sprites and sort them in proper draw order. On top of that, we need
+    // to extract the sprite data from the spritesheets.
+
+
+	// sort so that entries with lower 'y' get drawn first
+	let output_sprites = sprites.sort( (a,b) => {
+	    if (a.position.y < b.position.y) {
+            return -1
+	    } else if (a.position.y == b.position.y) {
+            if (a.position.x < b.position.x) {
+                return -1
+            } 
+	    }
+	    return 1
+	}).map( (sprite) => {
+	    let image = resources[sprite.image]
+	    let spritesheet = resources[sprite.spritesheet]
+        // TODO: Make the spritesheet a dictionary so we don't need to generate this lookup
+        let cutout_lookup = {}
+        spritesheet.images.forEach( (s) => {
+            cutout_lookup[s.name] = s
+        } )
+	    let cutout = cutout_lookup[sprite.sprite_name]
+
+	    let cutout_origin = {...cutout.origin}
+	    if (sprite.flip) {
+		    cutout_origin.x = cutout.bounds[2] - cutout_origin.x
+	    }
+
+	    let scale = 1.0
+	    let position = {x: sprite.position.x - cutout_origin.x*scale, 
+		        	    y: sprite.position.y - cutout_origin.y*scale}
+
+	    let output_sprite = { 
+            image: resources[sprite.image], 
+			src_position: {x: cutout.bounds[0], y: cutout.bounds[1]}, 
+			src_size: {width: cutout.bounds[2], height: cutout.bounds[3]},
+			flip: sprite.flip,
+			position: position, 
+            scale: scale
+        }
+	    return output_sprite
+	})
+
+    // TODO: Include any billboards here
+	// output_sprites.splice(0,0, { image: state.resources.image_lookup["rivercity.gif"].image, position: {x:-64,y:0}, src_size: {width:759,height:160}, scale: 1.5 } )
+
+    return output_sprites
+}
+

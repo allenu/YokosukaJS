@@ -1,0 +1,85 @@
+{
+   "images" : [
+      {
+         "bounds" : [ 342, 78, 37, 61 ],
+         "name" : "Hurt 1",
+         "origin" : { "x": 18, "y": 60 }
+      },
+      {
+         "bounds" : [ 4, 148, 35, 63 ],
+         "name" : "Hurt 2",
+         "origin" : { "x": 17, "y": 62 }
+      },
+      {
+         "bounds" : [ 394, 80, 35, 59 ],
+         "name" : "Hurt 3",
+         "origin" : { "x": 17, "y": 58 }
+      },
+      {
+         "bounds" : [ 112, 154, 37, 57 ],
+         "name" : "Hurt 4",
+         "origin" : { "x": 18, "y": 56 }
+      },
+      {
+         "bounds" : [ 158, 152, 35, 59 ],
+         "name" : "Hurt 5",
+         "origin" : { "x": 17, "y": 58 }
+      },
+      {
+         "bounds" : [ 4, 82, 33, 57 ],
+         "name" : "Jumping",
+         "origin" : { "x": 16, "y": 56 }
+      },
+      {
+         "bounds" : [ 288, 8, 31, 59 ],
+         "name" : "Kicking 1",
+         "origin" : { "x": 23, "y": 58 }
+      },
+      {
+         "bounds" : [ 330, 8, 45, 59 ],
+         "name" : "Kicking 2",
+         "origin" : { "x": 23, "y": 58 }
+      },
+      {
+         "bounds" : [ 384, 8, 47, 59 ],
+         "name" : "Kicking 3",
+         "origin" : { "x": 23, "y": 58 }
+      },
+      {
+         "bounds" : [ 48, 92, 43, 47 ],
+         "name" : "Landing",
+         "origin" : { "x": 21, "y": 46 }
+      },
+      {
+         "bounds" : [ 132, 4, 41, 63 ],
+         "name" : "Punching 1",
+         "origin" : { "x": 27, "y": 62 }
+      },
+      {
+         "bounds" : [ 186, 4, 35, 63 ],
+         "name" : "Punching 2",
+         "origin" : { "x": 19, "y": 62 }
+      },
+      {
+         "bounds" : [ 232, 4, 47, 63 ],
+         "name" : "Punching 3",
+         "origin" : { "x": 17, "y": 62 }
+      },
+      {
+         "bounds" : [ 4, 4, 33, 63 ],
+         "name" : "Standing",
+         "origin" : { "x": 18, "y": 62 }
+      },
+      {
+         "bounds" : [ 90, 4, 33, 63 ],
+         "name" : "Walking 1",
+         "origin" : { "x": 18, "y": 62 }
+      },
+      {
+         "bounds" : [ 48, 4, 33, 63 ],
+         "name" : "Walking 2",
+         "origin" : { "x": 18, "y": 62 }
+      }
+   ]
+}
+

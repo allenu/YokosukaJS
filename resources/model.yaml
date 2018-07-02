@@ -1,0 +1,134 @@
+default_state: standing
+states:
+  standing:
+    frames:
+      - sprite: Standing
+    next: standing
+  punching:
+    frames:
+      - sprite: Punching 1
+      - sprite: Punching 2
+      - sprite: Punching 3
+        attack: 10
+      - sprite: Punching 3
+  kicking:
+    frames:
+      - sprite: Kicking 1
+      - sprite: Kicking 2
+      - sprite: Kicking 3
+        attack: 5
+      - sprite: Kicking 3
+  walking_fwd:
+    frames:
+      - sprite: Walking 1
+        x_move: 10
+      - sprite: Walking 2
+        x_move: 10
+  walking_fwd_down:
+    frames:
+      - sprite: Walking 1
+        x_move: 5
+        y_move: 5
+      - sprite: Walking 2
+        x_move: 10
+        y_move: 5
+  walking_fwd_up:
+    frames:
+      - sprite: Walking 1
+        x_move: 5
+        y_move: -5
+      - sprite: Walking 2
+        x_move: 10
+        y_move: -5
+  walking_up:
+    frames:
+      - sprite: Walking 1
+        y_move: -10
+      - sprite: Walking 2
+        y_move: -10
+  walking_down:
+    frames:
+      - sprite: Walking 1
+        y_move: 10
+      - sprite: Walking 2
+        y_move: 10
+  turn_around:
+    frames:
+      - sprite: Standing
+      - sprite: Standing
+        flip: true
+  hurt:
+    frames:
+      - sprite: Hurt 1
+        spark: true
+      - sprite: Hurt 2
+      - sprite: Hurt 3
+      - sprite: Hurt 4
+      - sprite: Hurt 5
+      - sprite: Hurt 4
+      - sprite: Hurt 5
+      - sprite: Hurt 4
+      - sprite: Hurt 5
+      - sprite: Hurt 4
+      - sprite: Hurt 5
+    uninterruptible: true
+
+groups:
+  attacking:
+    - punching
+    - kicking
+  standing_walking:
+    - standing
+    - walking_fwd
+    - walking_down
+    - walking_up
+    - walking_fwd_down
+    - walking_fwd_up
+
+transitions:
+  - from: any
+    excluding:
+    - hurt
+    to: hurt
+    input:
+      - hurt
+
+  - from: standing_walking
+    to: punching
+    input:
+      - punch
+  - from: standing_walking
+    to: kicking
+    input:
+      - kick
+
+  - from: standing_walking
+    to: walking_fwd
+    input:
+      - forward
+    no_reset: true
+  - from: standing_walking
+    to: walking_fwd_down
+    input:
+      - forward_down
+    no_reset: true
+  - from: standing_walking
+    to: walking_fwd_up
+    input:
+      - forward_up
+    no_reset: true
+  - from: standing_walking
+    to: walking_down
+    input:
+      - down
+    no_reset: true
+  - from: standing_walking
+    to: walking_up
+    input:
+      - up
+    no_reset: true
+  - from: standing
+    to: turn_around
+    input:
+      - backward
+
