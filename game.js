@@ -207,8 +207,7 @@ function StartGame() {
             world: world,
             directors: directors,
             user_input: {},
-            triggers_fired: [],
-            frame_rate: 5.0
+            triggers_fired: []
         }
 
         Tick()
@@ -218,16 +217,18 @@ function StartGame() {
 }
 
 function Tick() {
-    let user_input = GetKeyState()
-    state = f_State(state, user_input)
+    if (!g_paused) {
+        let user_input = GetKeyState()
+        state = f_State(state, user_input)
 
-    console.log("Tick. " + state.frame_num) 
+        console.log("Tick. " + state.frame_num) 
 
-    const sprites = f_SpritesFromState(state)
-	RenderSprites(canvas, sprites)
+        const sprites = f_SpritesFromState(state)
+        RenderSprites(g_canvas, sprites)
+    }
 
 	// Set up next tick call
-	const time_delta = 1000.0 / state.frame_rate
+	const time_delta = 1000.0 / g_framerate
 	setTimeout(Tick, time_delta)
 }
 
