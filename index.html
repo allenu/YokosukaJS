@@ -1,59 +1,9 @@
 <html lang="en-US" dir="ltr">
-<style>
-body {
-  background-color: #f0f0f0;
-  font-family: Courier;
-}
-h1 {
-  font-size: 14pt;
-  color: #000;
-}
-h2 {
-  font-size: 10pt;
-  color: #330;
-}
-#framerate {
- font-size: 10pt;
-}
-#pause_button {
-  background-color: #f8ce90;
-  font-size: 10pt;
-  border-radius: 8px;
-  padding: 0.5em 3em;
-  margin: 0.5em;
-}
-.page {
-  text-align: center;
-  margin: 0 auto;
-  padding: 0.2em;
-}
-.footer {
-  font-size: 10pt;
-  font-family: Courier;
-  color: #880;
-}
-.footer a {
-  color: #840;
-}
-.footer a:hover {
-  color: #a00;
-  font-weight: bold;
-}
-</style>
-<title>BitWorld</title>
-<script type="text/javascript">
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-22494981-1']);
-  _gaq.push(['_trackPageview']);
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
-</script>
+<link href="styles.css" rel="stylesheet">
+<title>YokosukaJS</title>
 <body>
 <div class="page">
-  <h1>BitWorld</h1>
+  <h1>YokosukaJS</h1>
   <canvas id="canvas" style="image-rendering:pixelated; background-color: orange;" />
 </div>
 <div class="page">
@@ -69,6 +19,7 @@ h2 {
 <script src="./renderer.js"></script>
 <script src="./resourceloader.js"></script>
 <script src="./keyboard.js"></script>
+<script src="./external/js-yaml.min.js"></script>
 <script>
   var canvas = document.getElementById("canvas")
   canvas.width = 320
