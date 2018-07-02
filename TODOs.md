@@ -10,11 +10,14 @@ TODOs:
           - [ ] rules for when one character hits another
                 - [ ] keep track of which actors are touching
           - [ ] apply physics to make them move
+    - [ ] Move director code to own functions
+
+    - [ ] Update camera state
 
     - [x] Simple loop
-        - [ ] Setting up directors
-            - [ ] Get user director to move PC
-            - [ ] Get AI director to move bot
+        - [x] Setting up directors
+            - [x] Get user director to move PC
+            - [x] Get AI director to move bot
         - [x] Setting up actors
             - [x] Get state machine working
         - [ ] Inserting actors
@@ -31,6 +34,9 @@ TODOs:
 
 - [ ] Improvements
     - [ ] make spritesheet.json's images list a dictionary instead of array
+    - [ ] Support coordinated directors, where they share information and can coordinate attacks
+    - [ ] resilience
+          - [ ] display ugly icon when image missing
 
 - [ ] Second prototype
     - [ ] Load game map and actors from resources file

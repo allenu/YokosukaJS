@@ -8,9 +8,16 @@ var state = {}
 function CreateWorld() {
     let billboards = [
         {
-            filename: "school.png",
+            filename: "images/rivercity-school.gif",
             position: {x: 0, y: 0},
-            size: {width: 2*320, height: 240}
+            origin: {x: 0, y: 0},
+            scale: 1.5
+        },
+        {
+            filename: "images/food.png",
+            position: {x: 120, y: 200},
+            origin: {x: 0, y: 18},
+            scale: 1.5
         },
     ]
     let actors = [
@@ -59,8 +66,8 @@ function CreateWorld() {
         // At first, disallow user from crossing x==320
         {
             id: "boundary_1",
-            boundary_type: "vertical",
-            x: 320,
+            boundary_type: "less_than_x",
+            x: 300,
             enabled: true
         }
     ]
@@ -103,7 +110,7 @@ function CreateWorld() {
         }
     ]
     let map = {
-        bounds: { x: 0, y: 0, width: 2*320, height: 240 },
+        bounds: { x: 32, y: 160, width: 2*320, height: 64 },
         boundaries: boundaries
     }
 
@@ -284,6 +291,7 @@ function StartGame() {
         "images/rivercity-school.gif",
         "images/alex.png",
         "images/ryan.png",
+        "images/food.png",
     ]
 
     LoadResources(resource_list).then( (resources) => {
@@ -313,17 +321,17 @@ function Tick() {
         console.log(state)
 
         let sprites = f_SpritesFromState(state)
-        let preprocessed_sprites = PreprocessedSprites(sprites, state.resources)
+        let billboard_sprites = state.world.billboards.map( billboard => {
+            return {
+                image: billboard.filename,
+                position: billboard.position,
+                origin: billboard.origin,
+                scale: billboard.scale
+            }
+        })
+        sprites = sprites.concat(billboard_sprites)
 
-        // TODO: This is a hack to insert the background. In the future it
-        // should be part of the pipeline somewhere else.
-        preprocessed_sprites.splice(0,0, 
-            {
-                image: state.resources["images/rivercity-school.gif"], 
-                position: {x:-64,y:0},
-                src_size: {width:759,height:160}, 
-                scale: 1.5 
-            })
+        let preprocessed_sprites = PreprocessedSprites(sprites, state.resources)
 
         RenderSprites(g_canvas, preprocessed_sprites)
     }
@@ -374,23 +382,27 @@ function f_State(state, user_input) {
         if (animation_frame.flip) {
             actor.facing_left = actor.facing_left ? false : true
         }
-        actor.position.x = actor.position.x + x_move
-        actor.position.y = actor.position.y + y_move
+        let new_position = {...actor.position}
+        new_position.x += x_move
+        new_position.y += y_move
 
-        // TODO: Use bounds here and boundaries
         // Physical constraint rules
-        if (actor.position.x < 32) {
-            actor.position.x = 32
-        }
-        if (actor.position.x > 284) {
-            actor.position.x = 284
-        }
-        if (actor.position.y < 160) {
-            actor.position.y = 160
-        }
-        if (actor.position.y > 240-16) {
-            actor.position.y = 240-16
-        }
+        new_position.x = Math.max(new_position.x, state.world.map.bounds.x)
+        new_position.x = Math.min(new_position.x, state.world.map.bounds.x + state.world.map.bounds.width)
+        new_position.y = Math.max(new_position.y, state.world.map.bounds.y)
+        new_position.y = Math.min(new_position.y, state.world.map.bounds.y + state.world.map.bounds.height)
+
+        // Disallow crossing boundaries
+        state.world.map.boundaries
+            .filter(boundary => boundary.enabled)
+            .forEach( boundary => {
+                // TODO: allow only certain types of actors to be affected by boundaries
+                if (boundary.boundary_type == "less_than_x") {
+                    new_position.x = Math.min(new_position.x, boundary.x)
+                }
+            })
+
+        actor.position = new_position
     })
 
     new_state.world.triggers = f_Triggers(state.world.triggers, state.triggers_fired)
@@ -447,13 +459,22 @@ function PreprocessedSprites(sprites, resources) {
 	    return 1
 	}).map( (sprite) => {
 	    let image = resources[sprite.image]
-	    let spritesheet = resources[sprite.spritesheet]
-        // TODO: Make the spritesheet a dictionary so we don't need to generate this lookup
-        let cutout_lookup = {}
-        spritesheet.images.forEach( (s) => {
-            cutout_lookup[s.name] = s
-        } )
-	    let cutout = cutout_lookup[sprite.sprite_name]
+        let cutout = {}
+
+        if (sprite.spritesheet != null) {
+            let spritesheet = resources[sprite.spritesheet]
+            // TODO: Make the spritesheet a dictionary so we don't need to generate this lookup
+            let cutout_lookup = {}
+            spritesheet.images.forEach( (s) => {
+                cutout_lookup[s.name] = s
+            } )
+            cutout = cutout_lookup[sprite.sprite_name]
+        } else {
+            cutout = { 
+                bounds: [0, 0, image.naturalWidth, image.naturalHeight],
+                origin: sprite.origin
+            }
+        }
 
 	    let cutout_origin = {...cutout.origin}
 	    if (sprite.flip) {
@@ -461,6 +482,9 @@ function PreprocessedSprites(sprites, resources) {
 	    }
 
 	    let scale = 1.0
+        if (sprite.scale) {
+            scale = sprite.scale
+        }
 	    let position = {x: sprite.position.x - cutout_origin.x*scale, 
 		        	    y: sprite.position.y - cutout_origin.y*scale}
 
