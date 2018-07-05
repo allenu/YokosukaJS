@@ -354,7 +354,6 @@ function StartGame() {
         "images/rivercity-school.gif",
         "images/alex.png",
         "images/ryan.png",
-        "images/food.png",
     ]
 
     LoadResources(resource_list).then( (resources) => {
