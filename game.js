@@ -118,6 +118,7 @@ function CreateWorld() {
         map: map,
         billboards: billboards,
         actors: actors,
+        actors_touching: {},
         triggers: triggers,
         scripts: scripts
     }
@@ -130,8 +131,7 @@ function CreateInitialDirectorsFromWorld(world) {
         .map( actor => {
             return {
                 director_type: actor.director,
-                id: actor.id,
-                directions: []
+                id: actor.id
             }
         })
 
@@ -139,7 +139,7 @@ function CreateInitialDirectorsFromWorld(world) {
 }
 
 function MovementDirectionsFromUserInput(user_input, facing_left) {
-    var directions = []
+    let directions = []
     if (user_input.a_key) {
         directions.push("punch")
     }
@@ -182,16 +182,24 @@ function MovementDirectionsFromUserInput(user_input, facing_left) {
 }
 
 function f_Directors(frame_num, world_map, user_input, actors, directors) {
-    let new_directors = directors.map( director => { return {...director} } )
+    let new_directors = directors.map( director => { 
+        // TODO: Update each director's state. For now, they're really just stateless.
+        return {...director} 
+    })
+    return new_directors
+}
+
+function f_Directions(frame_num, world_map, user_input, actors, directors) {
+    let all_directions = {}
 
     // Update directors based on world state and type of director...
-    new_directors.forEach( (director) => {
+    directors.forEach( (director) => {
         let actor = actors.find( actor => { return actor.id == director.id } )
         let facing_left = actor.facing_left
 
         if (director.director_type == "user_1") {
             let directions = MovementDirectionsFromUserInput(user_input, facing_left)
-            director.directions = directions
+            all_directions[director.id] = directions
         } else {
             // TODO: Make this more sophisticated. For now, assume NPC.
             // TODO: Find nearest PC
@@ -244,28 +252,89 @@ function f_Directors(frame_num, world_map, user_input, actors, directors) {
                         directions.push("kick")
                     }
                 }
-                director.directions = directions
+                all_directions[director.id] = directions
             }
         }
     })
 
-    return new_directors
+    return all_directions
 }
 
-function f_Actors(frame_num, world_map, directors, actors, resources) {
-    let new_actors = actors.map( actor => {
-        let directions = []
-        directors.forEach( director => {
-            if (director.id == actor.id) {
-                directions = director.directions
-            }
-        })
+function f_SystemDirections(frame_num, world_map, resources, user_input, actors, actors_touching, directors, directions) {
+    let system_directions = {...directions}
 
+    // TODO: Change direction in various ways:
+    // - if standing on air and not falling, do falling direction
+    // - if walking into a wall, do pushing animation
+    //
+    // Attack an actor if some other actor of the opposite type is attacking him.
+    for (var actor_id in actors_touching) {
+        // See if this is being attacked by the opposite actor type. Only actors may attack the opposite type,
+        // never their own.
+        let opposite_actor_type = "player"
+        let actor = actors.find( actor => { return actor.id == actor_id } )
+        if (actor.actor_type == "player") {
+            opposite_actor_type = "npc"
+        }
+
+        let actors_touching_me = actors_touching[actor_id]
+	    let is_being_attacked = actors_touching_me.reduce( (acc, other_actor_id) => {
+            if (acc == false) {
+                let other_actor = actors.find( actor => { return actor.id == other_actor_id } )
+                if (other_actor != null && other_actor.actor_type == opposite_actor_type) {
+                    let model = resources[other_actor.model]
+                    let animation_state = model.states[other_actor.state_name]
+                    let animation_frame = animation_state.frames[other_actor.frame_index]
+                    if (animation_frame.attack > 0) {
+                        acc = true
+                    }
+                }
+            }
+            return acc
+	    }, false)
+
+	    if (is_being_attacked) {
+		    system_directions[actor_id] = [ "hurt" ]
+	    }
+    }
+
+    return system_directions
+}
+
+function f_Actors(frame_num, world_map, directions, actors, resources) {
+    let new_actors = actors.map( actor => {
+        let actor_directions = directions[actor.id]
+        if (actor_directions == null) {
+            actor_directions = []
+        }
         let model = resources[actor.model]
-        let new_actor = NextActorState(model, actor, directions)
+        let new_actor = NextActorState(model, actor, actor_directions)
         return new_actor
     })
     return new_actors
+}
+
+function f_ActorsTouching(actors) {
+    let actors_touching = {}
+
+    // TODO: Optimize this. Right now it's O(n^2).
+    actors.forEach( actor => {
+        let touching_actor = []
+
+        actors.forEach( other_actor => {
+            if (other_actor.id != actor.id) {
+                var x_squared = Math.pow((actor.position.x - other_actor.position.x), 2)
+                var y_squared = Math.pow((actor.position.y - other_actor.position.y), 2)
+                var distance = Math.sqrt(x_squared + y_squared)
+                if (distance <= 32.0) {
+                    touching_actor.push(other_actor.id)
+                }
+            }
+        })
+        actors_touching[actor.id] = touching_actor
+    })
+    
+    return actors_touching
 }
 
 function f_TriggersFired(old_actors, new_actors, triggers) {
@@ -302,6 +371,8 @@ function StartGame() {
             resources: resources,
             world: world,
             directors: directors,
+            requested_directions: [],
+            system_directions: [],
             user_input: {},
             triggers_fired: []
         }
@@ -354,10 +425,13 @@ function f_State(state, user_input) {
     //   - disable boundaries
     // - remove actors that were eliminated last round (enabled flag)
     // - remove directors eliminated last round
-    
+    //
+
     new_state.directors = f_Directors(new_state.frame_num, state.world.map, new_state.user_input, state.world.actors, state.directors)
-    // TODO: decouple directions from each director and filter them through the system rules here
-    new_state.world.actors = f_Actors(new_state.frame_num, state.world.map, new_state.directors, state.world.actors, state.resources)
+    new_state.requested_directions = f_Directions(new_state.frame_num, state.world.map, new_state.user_input, state.world.actors, new_state.directors)
+    new_state.system_directions = f_SystemDirections(new_state.frame_num, state.world.map, state.resources, new_state.user_input, state.world.actors, state.world.actors_touching, new_state.directors, new_state.requested_directions)
+
+    new_state.world.actors = f_Actors(new_state.frame_num, state.world.map, new_state.system_directions, state.world.actors, state.resources)
 
     // Update position
     // TODO: Make this more functional
@@ -404,6 +478,7 @@ function f_State(state, user_input) {
 
         actor.position = new_position
     })
+    new_state.world.actors_touching = f_ActorsTouching(new_state.world.actors)
 
     new_state.world.triggers = f_Triggers(state.world.triggers, state.triggers_fired)
     new_state.triggers_fired = f_TriggersFired(state.world.actors, new_state.world.actors, state.world.triggers)

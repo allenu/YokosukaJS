@@ -4,8 +4,8 @@ TODOs:
 - [ ] Basic prototype
     - [x] Load frame for character
     - [x] Load a few tile images
-    - [ ] Load map
-          - [ ] Display billboards
+    - [x] Load map
+          - [x] Display billboards
     - [ ] Implement "system directions"
           - [ ] rules for when one character hits another
                 - [ ] keep track of which actors are touching
@@ -13,6 +13,10 @@ TODOs:
     - [ ] Move director code to own functions
 
     - [ ] Update camera state
+    - [ ] Implement actors that can be picked up
+          - touched by pc once
+          - disappears on touch
+          - runs script on touch (boost hp)
 
     - [x] Simple loop
         - [x] Setting up directors
