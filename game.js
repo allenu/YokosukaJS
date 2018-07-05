@@ -13,12 +13,6 @@ function CreateWorld() {
             origin: {x: 0, y: 0},
             scale: 1.5
         },
-        {
-            filename: "images/food.png",
-            position: {x: 120, y: 200},
-            origin: {x: 0, y: 18},
-            scale: 1.5
-        },
     ]
     let actors = [
         {
