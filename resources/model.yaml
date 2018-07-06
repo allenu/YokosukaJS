@@ -61,6 +61,7 @@ states:
     frames:
       - sprite: Hurt 1
         spark: true
+        health_hit: 1
       - sprite: Hurt 2
       - sprite: Hurt 3
       - sprite: Hurt 4
@@ -71,6 +72,11 @@ states:
       - sprite: Hurt 5
       - sprite: Hurt 4
       - sprite: Hurt 5
+    uninterruptible: true
+  dying:
+    frames:
+      - sprite: Hurt 4
+        remove: true
     uninterruptible: true
 
 groups:
@@ -89,6 +95,15 @@ transitions:
   - from: any
     excluding:
     - hurt
+    - dying
+    to: dying
+    input:
+      - die
+
+  - from: any
+    excluding:
+    - hurt
+    - dying
     to: hurt
     input:
       - hurt

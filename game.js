@@ -25,6 +25,7 @@ function CreateWorld() {
             frame_index: 0,
             director: "bot_1",
             position: {x: 128, y: 96},
+            health: 2,
             facing_left: true,
             enabled: true
         },
@@ -38,6 +39,7 @@ function CreateWorld() {
             frame_index: 0,
             director: "user_1",
             position: {x: 64, y: 128},
+            health: 5,
             facing_left: false,
             enabled: true,
         },
@@ -52,6 +54,7 @@ function CreateWorld() {
             frame_index: 0,
             director: "bot_2",
             position: {x: 320 + 32, y: 64},
+            health: 5,
             facing_left: true,
             enabled: false
         },
@@ -69,8 +72,8 @@ function CreateWorld() {
         // When npc_1 defeated, cause boundary to disappear
         {
             id: "npc_1_died",
-            trigger_type: "npc_death",
-            npc_id: "npc_1",
+            trigger_type: "npc_remove",
+            actor_id: "npc_1",
             fired: false
         },
         // When player crosses x=320, then enable actor npc_2
@@ -121,8 +124,9 @@ function CreateWorld() {
 }
 
 function CreateInitialDirectorsFromWorld(world) {
-    let directors = world.actors.filter( actor => { return actor.enabled } )
-        .map( actor => {
+    // Note: directors are created even for disabled actors
+    // TODO: optimize which directors are in memory. we probably don't need them for disabled actors.
+    let directors = world.actors.map( actor => {
             return {
                 director_type: actor.director,
                 id: actor.id
@@ -287,7 +291,9 @@ function f_SystemDirections(frame_num, world_map, resources, user_input, actors,
             return acc
 	    }, false)
 
-	    if (is_being_attacked) {
+        if (actor.health <= 0) {
+		    system_directions[actor_id] = [ "die" ]
+        } else if (is_being_attacked) {
 		    system_directions[actor_id] = [ "hurt" ]
 	    }
     }
@@ -295,14 +301,23 @@ function f_SystemDirections(frame_num, world_map, resources, user_input, actors,
     return system_directions
 }
 
-function f_Actors(frame_num, world_map, directions, actors, resources) {
+function f_Actors(frame_num, world_map, directions, actors, enabled_actors, resources) {
     let new_actors = actors.map( actor => {
+        let enable_this_actor = enabled_actors.includes(actor.id)
+
+        if (!actor.enabled && !enable_this_actor) {
+            return {...actor}
+        }
+
         let actor_directions = directions[actor.id]
         if (actor_directions == null) {
             actor_directions = []
         }
         let model = resources[actor.model]
         let new_actor = NextActorState(model, actor, actor_directions)
+        if (enable_this_actor) {
+            new_actor.enabled = true
+        }
         return new_actor
     })
     return new_actors
@@ -312,10 +327,14 @@ function f_ActorsTouching(actors) {
     let actors_touching = {}
 
     // TODO: Optimize this. Right now it's O(n^2).
-    actors.forEach( actor => {
+    actors
+        .filter( actor => actor.enabled )
+        .forEach( actor => {
         let touching_actor = []
 
-        actors.forEach( other_actor => {
+        actors
+            .filter( actor => actor.enabled )
+            .forEach( other_actor => {
             if (other_actor.id != actor.id) {
                 var x_squared = Math.pow((actor.position.x - other_actor.position.x), 2)
                 var y_squared = Math.pow((actor.position.y - other_actor.position.y), 2)
@@ -340,7 +359,7 @@ function f_TriggersFired(old_actors, new_actors, triggers) {
 
 function f_Triggers(triggers, triggers_fired) {
     let new_triggers = triggers.map( trigger => {
-        let fired = triggers_fired.includes(trigger.id)
+        let fired = triggers_fired.includes(trigger.id) || trigger.fired
         return {...trigger, fired: fired}
     })
 
@@ -421,14 +440,48 @@ function f_State(state, user_input) {
     //
 
     new_state.directors = f_Directors(new_state.frame_num, state.world.map, new_state.user_input, state.world.actors, state.directors)
+
+    // See which actors are enabled by any scripts
+    let enabled_actors = []
+    let enable_boundaries = []
+    let disable_boundaries = []
+    state.world.scripts.forEach( script => {
+        if (state.triggers_fired.includes(script.trigger)) {
+            if (script.command.command_type == "enable_actor") {
+                enabled_actors.push(script.command.actor_id)
+            } else if (script.command.command_type == "boundary") {
+                // Toggle boundary setting
+                if (script.command.enable) {
+                    enable_boundaries.push(script.command.boundary_id)
+                } else {
+                    disable_boundaries.push(script.command.boundary_id)
+                }
+            }
+        }
+    })
+
+    // Toggle boundaries
+    new_state.world.map.boundaries = state.world.map.boundaries.map( boundary => {
+        let new_boundary = {...boundary}
+        if (enable_boundaries.includes(boundary.id)) {
+            new_boundary.enabled = true
+        } else if (disable_boundaries.includes(boundary.id)) {
+            new_boundary.enabled = false
+        }
+        return new_boundary
+    })
+
     new_state.requested_directions = f_Directions(new_state.frame_num, state.world.map, new_state.user_input, state.world.actors, new_state.directors)
     new_state.system_directions = f_SystemDirections(new_state.frame_num, state.world.map, state.resources, new_state.user_input, state.world.actors, state.world.actors_touching, new_state.directors, new_state.requested_directions)
 
-    new_state.world.actors = f_Actors(new_state.frame_num, state.world.map, new_state.system_directions, state.world.actors, state.resources)
+    new_state.world.actors = f_Actors(new_state.frame_num, state.world.map, new_state.system_directions, state.world.actors, enabled_actors, state.resources)
 
     // Update position
     // TODO: Make this more functional
-    new_state.world.actors.forEach( actor => {
+    // TODO: Consider just moving actor positions to their own dictionary, separate from the actors list
+    new_state.world.actors
+        .filter( actor => actor.enabled )
+        .forEach( actor => {
         let model = state.resources[actor.model]
         let animation_state = model.states[actor.state_name]
         let animation_frame = animation_state.frames[actor.frame_index]
@@ -471,10 +524,72 @@ function f_State(state, user_input) {
 
         actor.position = new_position
     })
+
+    // Update health based on previous state health_hit property
+    new_state.world.actors
+        .filter( actor => actor.enabled )
+        .forEach( actor => {
+        let model = state.resources[actor.model]
+        let animation_state = model.states[actor.state_name]
+        let animation_frame = animation_state.frames[actor.frame_index]
+
+        if (animation_frame.health_hit > 0) {
+            actor.health -= animation_frame.health_hit
+        }
+    })
+
+    let triggers_fired = []
+    state.world.triggers.forEach( trigger => {
+        if (!trigger.fired) {
+            if (trigger.trigger_type == "npc_remove") {
+                let actor = new_state.world.actors
+                    .find( actor => {
+                        if (actor.enabled && actor.id == trigger.actor_id) {
+                            let model = state.resources[actor.model]
+                            let animation_state = model.states[actor.state_name]
+                            let animation_frame = animation_state.frames[actor.frame_index]
+                            return animation_frame.remove
+                        } else {
+                            return false
+                        }
+                    })
+
+                if (actor != null) {
+                    triggers_fired.push(trigger.id)
+                }
+            } else if (trigger.trigger_type == "left_right_cross") {
+                // See which player actors crossed the line
+                new_state.world.actors.forEach( actor => {
+                    let old_actor = state.world.actors.find( old_actor => { return old_actor.id == actor.id } )
+                    if (old_actor != null) {
+                        if (old_actor.position.x < trigger.x && actor.position.x >= trigger.x) {
+                            triggers_fired.push(trigger.id)
+                        }
+                    }
+                })
+            }
+        }
+    })
+    new_state.triggers_fired = triggers_fired
+
+    // new_state.triggers_fired = f_TriggersFired(state.world.actors, new_state.world.actors, state.world.triggers)
+    
+    new_state.world.triggers = f_Triggers(state.world.triggers, new_state.triggers_fired)
+
+    // TODO: Remove any actors that have "remove" set to true
+    new_state.world.actors
+        .filter( actor => actor.enabled )
+        .forEach( actor => {
+        let model = state.resources[actor.model]
+        let animation_state = model.states[actor.state_name]
+        let animation_frame = animation_state.frames[actor.frame_index]
+        if (animation_frame.remove) {
+            actor.enabled = false
+        }
+    })
+
     new_state.world.actors_touching = f_ActorsTouching(new_state.world.actors)
 
-    new_state.world.triggers = f_Triggers(state.world.triggers, state.triggers_fired)
-    new_state.triggers_fired = f_TriggersFired(state.world.actors, new_state.world.actors, state.world.triggers)
 
     return new_state
 }

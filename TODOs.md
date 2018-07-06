@@ -6,14 +6,14 @@ TODOs:
     - [x] Load a few tile images
     - [x] Load map
           - [x] Display billboards
-    - [ ] Implement "system directions"
-          - [ ] rules for when one character hits another
-                - [ ] keep track of which actors are touching
-          - [ ] apply physics to make them move
-    - [ ] Move director code to own functions
+    - [x] Implement "system directions"
+          - [x] rules for when one character hits another
+                - [x] keep track of which actors are touching
+          - [x] apply physics to make them move
+    - [x] Move director code to own functions
 
     - [ ] Update camera state
-    - [ ] Implement actors that can be picked up
+    - [ ] Implement actors (items) that can be picked up
           - touched by pc once
           - disappears on touch
           - runs script on touch (boost hp)
@@ -24,19 +24,36 @@ TODOs:
             - [x] Get AI director to move bot
         - [x] Setting up actors
             - [x] Get state machine working
-        - [ ] Inserting actors
-            - [ ] Based on map and user state, insert actor as necessary
-        - [ ] Deleting actors
-            - [ ] Based on "remove me" flag, remove them
-            - [ ] Set "remove me" once health <= 0
-        - [ ] Simple physics
-        - [ ] Simple rules
+        - [x] Inserting actors
+            - [x] Based on map and user state, insert actor as necessary
+        - [x] Deleting actors
+            - [x] Based on "remove me" flag, remove them
+            - [x] Set "remove me" once health <= 0
+        - [x] Simple physics
+        - [x] Simple rules
+        - [ ] Move camera around
+              - [ ] Disallow camera from going out of bounds
+                    - [ ] determine min_x and max_x from boundary and boundaries
+                    - [ ] if max_x - min_x <= camera_width, then center camera
+                    - [ ] always gradually move camera, so if a boundary disappears, slowly move camera
+                          to new position. 
+                          [ ] have a camera target_x that it's always moving to, but camera movement is limited per frame
+                          [ ] generally, target_x will be where player's position.x is, but could be limited by bounds
+        - [ ] Show health bar
         - [ ] End map condition
             - [ ] User passes a line
-        - [ ] Triggers
-            - [ ] Remove boundary when last enemy in a section dies
+            - [ ] User dies
+            - [ ] Run script command to transition to another screen or display text and pause game state (?)
+        - [x] Triggers
+            - [x] Fire trigger when actor is removed
+                  - [x] add 'remove' property to animation frame to signal removal
+                  - [x] add system rule where if health <= 0 and we can interrupt the state, force it to dying animation
+                        where last frame of dying has 'remove' property
+                  - [x] when 'remove' happens, trigger the event
+            - [x] Remove boundary when last enemy in a section dies
 
 - [ ] Improvements
+    - [ ] actors should be dictionary and not array
     - [ ] make spritesheet.json's images list a dictionary instead of array
     - [ ] Support coordinated directors, where they share information and can coordinate attacks
     - [ ] resilience
