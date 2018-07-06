@@ -39,7 +39,7 @@ function CreateWorld() {
             frame_index: 0,
             director: "user_1",
             position: {x: 64, y: 128},
-            health: 5,
+            health: 500,
             facing_left: false,
             enabled: true,
         },
@@ -53,7 +53,7 @@ function CreateWorld() {
             state_name: "standing",
             frame_index: 0,
             director: "bot_2",
-            position: {x: 320 + 32, y: 64},
+            position: {x: 512, y: 64},
             health: 5,
             facing_left: true,
             enabled: false
@@ -64,7 +64,7 @@ function CreateWorld() {
         {
             id: "boundary_1",
             boundary_type: "less_than_x",
-            x: 300,
+            x: 360,
             enabled: true
         }
     ]
@@ -80,7 +80,7 @@ function CreateWorld() {
         {
             id: "crossed_line",
             trigger_type: "left_right_cross",
-            x: 320,
+            x: 364,
             fired: false
         },
     ]
@@ -107,7 +107,7 @@ function CreateWorld() {
         }
     ]
     let map = {
-        bounds: { x: 32, y: 160, width: 2*320, height: 64 },
+        bounds: { x: 0, y: 160, width: 2*320, height: 64 },
         boundaries: boundaries
     }
 
@@ -366,6 +366,65 @@ function f_Triggers(triggers, triggers_fired) {
     return new_triggers
 }
 
+function f_Camera(state, camera) {
+    let new_camera = {...camera}
+
+    let target = camera.target
+
+    // Try to center in on the player actor
+    let player_actor = state.world.actors.find( actor => { return actor.actor_type == "player" } )
+    if (player_actor) {
+        target = {x: player_actor.position.x - camera.size.width / 2,
+                  y: player_actor.position.y - camera.size.height / 2}
+    }
+
+
+    let min_x = state.world.map.bounds.x
+    let max_x = state.world.map.bounds.x + state.world.map.bounds.width
+
+    // Limit right side based on any boundaries enabled
+    state.world.map.boundaries
+        .filter( boundary => boundary.enabled )
+        .forEach( boundary => {
+            if (boundary.boundary_type == "less_than_x") {
+                max_x = Math.min(boundary.x, max_x)
+            }
+        })
+
+    let min_max_x_delta = max_x - min_x
+    if (min_max_x_delta < state.camera.size.width) {
+        target.x = min_x
+    } else if (target.x < min_x) {
+        // Disallow scrolling left beyond min_x
+        target.x = min_x
+    } else if (target.x >= max_x - state.camera.size.width) {
+        // Disallow scrollling right beyond max_x
+        target.x = max_x - state.camera.size.width
+    }
+
+    // Move towards the target
+    let inc_x = 0
+    let max_x_delta = 10
+    if (camera.position.x < target.x) {
+        inc_x = Math.min(max_x_delta, target.x - camera.position.x)
+    } else if (camera.position.x > target.x) {
+        inc_x = Math.max(-max_x_delta, target.x - camera.position.x)
+    }
+    let inc_y = 0
+    let max_y_delta = 0 // Set to 0 because we don't want to allow vertical camera movement
+    if (camera.position.y < target.y) {
+        inc_y = Math.min(max_y_delta, target.y - camera.position.y)
+    } else if (camera.position.y > target.y) {
+        inc_y = Math.max(-max_y_delta, target.x - camera.position.y)
+    }
+
+    let new_position = {x: camera.position.x + inc_x, y: camera.position.y + inc_y}
+    new_camera.target = target
+    new_camera.position = new_position
+
+    return new_camera
+}
+
 function StartGame() {
     let resource_list = [
         "resources/model.yaml",
@@ -386,7 +445,8 @@ function StartGame() {
             requested_directions: [],
             system_directions: [],
             user_input: {},
-            triggers_fired: []
+            triggers_fired: [],
+            camera: { position: {x: 0, y: 0}, target: {x: 0, y: 0}, size: { width: 320, height: 240 } }
         }
 
         Tick()
@@ -414,7 +474,7 @@ function Tick() {
         })
         sprites = sprites.concat(billboard_sprites)
 
-        let preprocessed_sprites = PreprocessedSprites(sprites, state.resources)
+        let preprocessed_sprites = PreprocessedSprites(sprites, state.resources, state.camera)
 
         RenderSprites(g_canvas, preprocessed_sprites)
     }
@@ -590,6 +650,7 @@ function f_State(state, user_input) {
 
     new_state.world.actors_touching = f_ActorsTouching(new_state.world.actors)
 
+    new_state.camera = f_Camera(state, state.camera)
 
     return new_state
 }
@@ -623,7 +684,7 @@ function f_SpritesFromState(state) {
     return sprites
 }
 
-function PreprocessedSprites(sprites, resources) {
+function PreprocessedSprites(sprites, resources, camera) {
     // Sprites we get from f_SpritesFromState is just info about which sprite
     // to draw and where in the world map we want it. We need to cull this set
     // of sprites and sort them in proper draw order. On top of that, we need
@@ -668,8 +729,8 @@ function PreprocessedSprites(sprites, resources) {
         if (sprite.scale) {
             scale = sprite.scale
         }
-	    let position = {x: sprite.position.x - cutout_origin.x*scale, 
-		        	    y: sprite.position.y - cutout_origin.y*scale}
+	    let position = {x: sprite.position.x - cutout_origin.x*scale - camera.position.x, 
+		        	    y: sprite.position.y - cutout_origin.y*scale - camera.position.y}
 
 	    let output_sprite = { 
             image: resources[sprite.image], 

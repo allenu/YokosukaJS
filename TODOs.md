@@ -12,11 +12,11 @@ TODOs:
           - [x] apply physics to make them move
     - [x] Move director code to own functions
 
-    - [ ] Update camera state
+    - [x] Update camera state
     - [ ] Implement actors (items) that can be picked up
-          - touched by pc once
-          - disappears on touch
-          - runs script on touch (boost hp)
+          * touched by pc once
+          * disappears on touch
+          * runs script on touch (boost hp)
 
     - [x] Simple loop
         - [x] Setting up directors
@@ -31,14 +31,14 @@ TODOs:
             - [x] Set "remove me" once health <= 0
         - [x] Simple physics
         - [x] Simple rules
-        - [ ] Move camera around
-            - [ ] Disallow camera from going out of bounds
-                - [ ] determine min_x and max_x from boundary and boundaries
-                    - [ ] if max_x - min_x <= camera_width, then center camera
-                    - [ ] always gradually move camera, so if a boundary disappears, slowly move camera
+        - [x] Move camera around
+            - [x] Disallow camera from going out of bounds
+                - [x] determine min_x and max_x from boundary and boundaries
+                    - [x] if max_x - min_x <= camera_width, then center camera
+                    - [x] always gradually move camera, so if a boundary disappears, slowly move camera
                           to new position. 
-                        - [ ] have a camera target_x that it's always moving to, but camera movement is limited per frame
-                        - [ ] generally, target_x will be where player's position.x is, but could be limited by bounds
+                        - [x] have a camera target_x that it's always moving to, but camera movement is limited per frame
+                        - [x] generally, target_x will be where player's position.x is, but could be limited by bounds
         - [ ] Show health bar
         - [ ] End map condition
             - [ ] User passes a line
