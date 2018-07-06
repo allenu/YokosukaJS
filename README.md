@@ -1,6 +1,10 @@
 # YokosukaJS
 
-YokosukaJS is a simple functional programming-style beat-em-up game engine.
+YokosukaJS is a simple functional programming-style beat-em-up game engine written in JavaScript.
+
+See it in action in your browser here:
+
+https://www.ussherpress.com/yokosukajs/
 
 # How to try it
 
