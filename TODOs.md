@@ -32,13 +32,13 @@ TODOs:
         - [x] Simple physics
         - [x] Simple rules
         - [ ] Move camera around
-              - [ ] Disallow camera from going out of bounds
-                    - [ ] determine min_x and max_x from boundary and boundaries
+            - [ ] Disallow camera from going out of bounds
+                - [ ] determine min_x and max_x from boundary and boundaries
                     - [ ] if max_x - min_x <= camera_width, then center camera
                     - [ ] always gradually move camera, so if a boundary disappears, slowly move camera
                           to new position. 
-                          [ ] have a camera target_x that it's always moving to, but camera movement is limited per frame
-                          [ ] generally, target_x will be where player's position.x is, but could be limited by bounds
+                        - [ ] have a camera target_x that it's always moving to, but camera movement is limited per frame
+                        - [ ] generally, target_x will be where player's position.x is, but could be limited by bounds
         - [ ] Show health bar
         - [ ] End map condition
             - [ ] User passes a line
@@ -54,6 +54,10 @@ TODOs:
 
 - [ ] Improvements
     - [ ] actors should be dictionary and not array
+    - [ ] Generalize the properties in the animation frames
+          - instead of using the 'remove' property, add trigger properties that can be used to fire triggers/scripts
+    - [ ] Have triggers that can fire multiple times and some that only fire once
+    - [ ] Allow for multiple trigger criteria (i.e. don't use trigger id for triggers as a unique key in the list)
     - [ ] make spritesheet.json's images list a dictionary instead of array
     - [ ] Support coordinated directors, where they share information and can coordinate attacks
     - [ ] resilience
