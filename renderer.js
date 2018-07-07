@@ -52,8 +52,8 @@ function RenderSprites(canvas, sprites, do_not_clear_screen) {
     var canvas_image_height = 0
 
     if (sprite.scale != null) {
-        canvas_image_width = src_size.width * sprite.scale
-	    canvas_image_height = src_size.height * sprite.scale
+        canvas_image_width = src_size.width * sprite.scale.x
+	    canvas_image_height = src_size.height * sprite.scale.y
     } else {
         canvas_image_width = sprite.size.width
 	    canvas_image_height = sprite.size.height

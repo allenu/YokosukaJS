@@ -40,6 +40,18 @@ TODOs:
                         - [x] have a camera target_x that it's always moving to, but camera movement is limited per frame
                         - [x] generally, target_x will be where player's position.x is, but could be limited by bounds
         - [ ] Show health bar
+            - [x] show player's health
+            - [ ] show health of actor player is "interacting" with
+                - [ ] define interaction as
+                    - whoever you've attacked last
+                    - whoever is attacking you
+                    - whoever you are nearest
+                    - expires with flashing over course of 2s when enemy dies
+                    - expires after none of the above, after 5s
+        - [ ] handle coordinating directors
+            - [ ] only one attacker at a time
+            - [ ] enemies take turns attacking
+            - [ ] all enemies stand at a distance, except for one
         - [ ] End map condition
             - [ ] User passes a line
             - [ ] User dies

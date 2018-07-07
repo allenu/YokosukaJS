@@ -11,7 +11,7 @@ function CreateWorld() {
             filename: "images/rivercity-school.gif",
             position: {x: 0, y: 0},
             origin: {x: 0, y: 0},
-            scale: 1.5
+            scale: {x: 1.5, y: 1.5}
         },
     ]
     let actors = [
@@ -26,6 +26,7 @@ function CreateWorld() {
             director: "bot_1",
             position: {x: 128, y: 96},
             health: 2,
+            full_health: 2,
             facing_left: true,
             enabled: true
         },
@@ -39,7 +40,8 @@ function CreateWorld() {
             frame_index: 0,
             director: "user_1",
             position: {x: 64, y: 128},
-            health: 500,
+            health: 10,
+            full_health: 10,
             facing_left: false,
             enabled: true,
         },
@@ -55,6 +57,7 @@ function CreateWorld() {
             director: "bot_2",
             position: {x: 512, y: 64},
             health: 5,
+            full_health: 5,
             facing_left: true,
             enabled: false
         },
@@ -432,6 +435,9 @@ function StartGame() {
         "images/rivercity-school.gif",
         "images/alex.png",
         "images/ryan.png",
+        "images/yellow_rect.png",
+        "images/red_rect.png",
+        "images/black_rect.png",
     ]
 
     LoadResources(resource_list).then( (resources) => {
@@ -476,6 +482,62 @@ function Tick() {
 
         let preprocessed_sprites = PreprocessedSprites(sprites, state.resources, state.camera)
 
+        // TODO: move to hud sprite generator
+        // TODO: all should combine PreprocessedSprites with SpritesFromState
+        let hud_sprites = []
+
+        // TODO: pick whose energy to show
+        //
+        let player = state.world.actors.find( actor => actor.actor_type == "player" )
+        let enemy = state.world.actors.find( actor => actor.enabled && actor.actor_type == "npc" )
+        let actors_and_offset = [
+            {actor: player, offset: 16},
+            {actor: enemy, offset: 160 + 16},
+        ]
+        actors_and_offset.forEach( info => {
+            if (info.actor == null) { return }
+
+            let health_percent = info.actor.health / info.actor.full_health
+            let health_width = 120
+            let x_offset = info.offset
+            let height = 16.0 / 32.0
+
+            let border = {
+                image: state.resources["images/black_rect.png"],
+                position: {x: x_offset-4.0, y: 16 - 4},
+                origin: {x: 0, y: 0},
+                scale: {x: (health_width+8.0)/32.0, y: 24.0/32.0}
+            }
+            hud_sprites.push(border)
+
+            if (health_percent < 1.0) {
+                let x = x_offset + health_percent * health_width
+                let width = (1-health_percent) * health_width / 32.0
+
+                let left_energy_bar_red = {
+                    image: state.resources["images/red_rect.png"],
+                    position: {x: x, y: 16},
+                    origin: {x: 0, y: 0},
+                    scale: {x: width, y: height}
+                }
+                hud_sprites.push(left_energy_bar_red)
+            }
+            if (health_percent > 0.0) {
+                let x = x_offset
+                let width = health_percent * health_width / 32.0
+
+                let left_energy_bar_yellow = {
+                    image: state.resources["images/yellow_rect.png"],
+                    position: {x: x, y: 16},
+                    origin: {x: 0, y: 0},
+                    scale: {x: width, y: height}
+                }
+                hud_sprites.push(left_energy_bar_yellow)
+            }
+        })
+
+        preprocessed_sprites = preprocessed_sprites.concat(hud_sprites)
+
         RenderSprites(g_canvas, preprocessed_sprites)
     }
 
@@ -489,15 +551,6 @@ function f_State(state, user_input) {
     new_state.frame_num += 1
     new_state.user_input = user_input
     new_state.world = {...state.world}
-
-    // TODO:
-    // - execute scripts based on triggers fired
-    //   - introduce new actors as necessary (enable them)
-    //   - introduce new directors as necessary based on actors
-    //   - disable boundaries
-    // - remove actors that were eliminated last round (enabled flag)
-    // - remove directors eliminated last round
-    //
 
     new_state.directors = f_Directors(new_state.frame_num, state.world.map, new_state.user_input, state.world.actors, state.directors)
 
@@ -636,7 +689,7 @@ function f_State(state, user_input) {
     
     new_state.world.triggers = f_Triggers(state.world.triggers, new_state.triggers_fired)
 
-    // TODO: Remove any actors that have "remove" set to true
+    // Remove any actors that have "remove" set to true
     new_state.world.actors
         .filter( actor => actor.enabled )
         .forEach( actor => {
@@ -725,12 +778,12 @@ function PreprocessedSprites(sprites, resources, camera) {
 		    cutout_origin.x = cutout.bounds[2] - cutout_origin.x
 	    }
 
-	    let scale = 1.0
+	    let scale = {x: 1.0, y: 1.0}
         if (sprite.scale) {
             scale = sprite.scale
         }
-	    let position = {x: sprite.position.x - cutout_origin.x*scale - camera.position.x, 
-		        	    y: sprite.position.y - cutout_origin.y*scale - camera.position.y}
+	    let position = {x: sprite.position.x - cutout_origin.x*scale.x - camera.position.x, 
+		        	    y: sprite.position.y - cutout_origin.y*scale.y - camera.position.y}
 
 	    let output_sprite = { 
             image: resources[sprite.image], 
