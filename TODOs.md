@@ -48,6 +48,7 @@ TODOs:
                     - whoever you are nearest
                     - expires with flashing over course of 2s when enemy dies
                     - expires after none of the above, after 5s
+            - [ ] animate energy change over time
         - [ ] handle coordinating directors
             - [ ] only one attacker at a time
             - [ ] enemies take turns attacking
@@ -65,6 +66,8 @@ TODOs:
             - [x] Remove boundary when last enemy in a section dies
 
 - [ ] Improvements
+    - [ ] add web audio
+    - [ ] add "reset" button to demo
     - [ ] actors should be dictionary and not array
     - [ ] Generalize the properties in the animation frames
           - instead of using the 'remove' property, add trigger properties that can be used to fire triggers/scripts
