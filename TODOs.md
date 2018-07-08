@@ -79,7 +79,7 @@ TODOs:
           - [ ] display ugly icon when image missing
 
 - [ ] Second prototype
-    - [ ] Load game map and actors from resources file
+    - [x] Load game map and actors from resources file
     - [ ] Load top-level description of which maps to load from resources file
     - [ ] State change for presentation
         - [ ] Loading

@@ -5,127 +5,6 @@ var state = {}
 // - bot_1: goes after nearest player actor
 // - bot_2: chargest at player actor, then backs away
 
-function CreateWorld() {
-    let billboards = [
-        {
-            filename: "images/rivercity-school.gif",
-            position: {x: 0, y: 0},
-            origin: {x: 0, y: 0},
-            scale: {x: 1.5, y: 1.5}
-        },
-    ]
-    let actors = [
-        {
-            id: "npc_1",
-            actor_type: "npc",
-            model: "resources/model.yaml",
-            sprites: "images/ryan.png",
-            spritesheet: "resources/spritesheet.json",
-            state_name: "standing",
-            frame_index: 0,
-            director: "bot_1",
-            position: {x: 128, y: 96},
-            health: 2,
-            full_health: 2,
-            facing_left: true,
-            enabled: true
-        },
-        {
-            id: "pc",
-            actor_type: "player",
-            model: "resources/model.yaml",
-            sprites: "images/alex.png",
-            spritesheet: "resources/spritesheet.json",
-            state_name: "standing",
-            frame_index: 0,
-            director: "user_1",
-            position: {x: 64, y: 128},
-            health: 10,
-            full_health: 10,
-            facing_left: false,
-            enabled: true,
-        },
-        // Note: this character is not immediately enabled. This is triggered once character moves past a certain line.
-        {
-            id: "npc_2",
-            actor_type: "npc",
-            model: "resources/model.yaml",
-            sprites: "images/ryan.png",
-            spritesheet: "resources/spritesheet.json",
-            state_name: "standing",
-            frame_index: 0,
-            director: "bot_2",
-            position: {x: 512, y: 64},
-            health: 5,
-            full_health: 5,
-            facing_left: true,
-            enabled: false
-        },
-    ]
-    let boundaries = [
-        // At first, disallow user from crossing x==320
-        {
-            id: "boundary_1",
-            boundary_type: "less_than_x",
-            x: 360,
-            enabled: true
-        }
-    ]
-    let triggers = [
-        // When npc_1 defeated, cause boundary to disappear
-        {
-            id: "npc_1_died",
-            trigger_type: "npc_remove",
-            actor_id: "npc_1",
-            fired: false
-        },
-        // When player crosses x=320, then enable actor npc_2
-        {
-            id: "crossed_line",
-            trigger_type: "left_right_cross",
-            x: 364,
-            fired: false
-        },
-    ]
-    // For now, scripts are executed when a trigger fires. In the future we
-    // could probably allow scripts to execute other scripts or something
-    // more sophisticated.
-    let scripts = [
-        {
-            id: "turn_off_boundary",
-            trigger: "npc_1_died",
-            command: {
-                command_type: "boundary",
-                boundary_id: "boundary_1",
-                enable: false
-            },
-        },
-        {
-            id: "enable_npc_2",
-            trigger: "crossed_line",
-            command: {
-                command_type: "enable_actor",
-                actor_id: "npc_2"
-            },
-        }
-    ]
-    let map = {
-        bounds: { x: 0, y: 160, width: 2*320, height: 64 },
-        boundaries: boundaries
-    }
-
-    let world = {
-        map: map,
-        billboards: billboards,
-        actors: actors,
-        actors_touching: {},
-        triggers: triggers,
-        scripts: scripts
-    }
-
-    return world
-}
-
 function CreateInitialDirectorsFromWorld(world) {
     // Note: directors are created even for disabled actors
     // TODO: optimize which directors are in memory. we probably don't need them for disabled actors.
@@ -430,6 +309,7 @@ function f_Camera(state, camera) {
 
 function StartGame() {
     let resource_list = [
+        "resources/world.yaml",
         "resources/model.yaml",
         "resources/spritesheet.json",
         "images/rivercity-school.gif",
@@ -441,7 +321,7 @@ function StartGame() {
     ]
 
     LoadResources(resource_list).then( (resources) => {
-        let world = CreateWorld()
+        let world = resources["resources/world.yaml"]
         let directors = CreateInitialDirectorsFromWorld(world)
         state = {
             frame_num: 0,
