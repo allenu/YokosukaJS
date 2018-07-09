@@ -2,6 +2,31 @@
 TODOs:
 
 - [ ] Basic prototype
+    - [ ] Implement signals
+        - [ ] Collect all signals
+            - from all animation frames for all enabled actors
+            - from all commands
+            - from any boundaries that are crossed
+        - [ ] Animation model should let you enter a signals like this
+            - sprite: Hurt 1
+              signals: hurt
+        - [ ] Should support uppercase first letter for permanent signals and lowercase first letter for one-frame signals
+        - [ ] Implement predicates
+            - [ ] Define the syntax for specifying a signal 
+                - maybe using a colon? "signal_name:source_id", something like "remove:npc_1"
+            - [ ] Handle signal from specific actor type (from player)
+            - [ ] Handle multiple permanent signals
+                - ex: user must have killed off two of the npcs for door to open
+        - [ ] Clear all one-frame signals from frame to frame
+    - [ ] Implement timer command
+        - [ ] Set signal after time has elapsed
+        - [ ] Ensure timer doesn't get set when game engine is paused 
+    - [ ] Add simple transition animations (commands)
+        - [ ] Enable/Disable a billboard
+        - [ ] Fade in/fade out a billboard
+        - [ ] Move a billboard from one location to another, over a given period of time
+        - [ ] Send signal when animations done
+            
     - [x] Load frame for character
     - [x] Load a few tile images
     - [x] Load map
@@ -38,14 +63,6 @@ TODOs:
         - [x] Show health bar
             - [x] show player's health
             - [x] animate energy change over time
-        - [ ] handle coordinating directors
-            - [ ] only one attacker at a time
-            - [ ] enemies take turns attacking
-            - [ ] all enemies stand at a distance, except for one
-        - [ ] End map condition
-            - [ ] User passes a line
-            - [ ] User dies
-            - [ ] Run script command to transition to another screen or display text and pause game state (?)
         - [x] Triggers
             - [x] Fire trigger when actor is removed
                   - [x] add 'remove' property to animation frame to signal removal
@@ -55,6 +72,14 @@ TODOs:
             - [x] Remove boundary when last enemy in a section dies
 
 - [ ] Improvements
+    - [ ] handle coordinating directors
+        - [ ] only one attacker at a time
+        - [ ] enemies take turns attacking
+        - [ ] all enemies stand at a distance, except for one
+    - [ ] End map condition
+        - [ ] User passes a line
+        - [ ] User dies
+        - [ ] Run script command to transition to another screen or display text and pause game state (?)
     - [ ] add web audio
     - [ ] add "reset" button to demo
     - [ ] actors should be dictionary and not array
@@ -68,6 +93,8 @@ TODOs:
           - [ ] display ugly icon when image missing
 
 - [ ] Second prototype
+    - [ ] Dialog box
+
     - [x] Load game map and actors from resources file
     - [ ] show health of actor player is "interacting" with
         - [ ] define interaction as
