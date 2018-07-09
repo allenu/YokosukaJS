@@ -1,14 +1,15 @@
 body {
-  background-color: #f0f0f0;
-  font-family: Courier;
+  background-color: #fefef0;
+  font-family: Garamond;
+  padding: 0px;
+  font-size: 14pt;
+  color: #555;
 }
 h1 {
   font-size: 11pt;
-  color: #000;
 }
 h2 {
   font-size: 8pt;
-  color: #330;
 }
 #framerate {
  font-size: 10pt;
@@ -26,14 +27,13 @@ h2 {
   padding: 0.2em;
 }
 .footer {
-  font-size: 10pt;
+  font-size: 8pt;
   font-family: Courier;
-  color: #880;
 }
 .footer a {
-  color: #840;
+  color: #37a;
+  font-weight: bold;
 }
 .footer a:hover {
-  color: #a00;
-  font-weight: bold;
+  color: #00f;
 }
