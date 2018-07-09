@@ -1,6 +1,15 @@
 
 TODOs:
 
+- [ ] Refactor work
+    - [ ] Move top-level driver to its own file
+        - has Tick()
+        - has StartGame()
+    - [ ] Move renderer part to its own file
+    - [ ] Move directors to own file
+    - [ ] break out health stuff to own state? (separate it from actor?)
+    - [ ] move trigger code to own state func
+
 - [ ] Basic prototype
     - [ ] Implement signals
         - [ ] Collect all signals
@@ -70,6 +79,16 @@ TODOs:
                         where last frame of dying has 'remove' property
                   - [x] when 'remove' happens, trigger the event
             - [x] Remove boundary when last enemy in a section dies
+
+# Bugs
+
+[ ] Via reddit
+
+    [ ] as /u/ordinaryinstruction points out, there seems to be an entire frame devoted to turning around, which feels sluggish as you change direction. This probably isn't really a game engine thing though.
+    [ ] Your texture coordinates seem to be possibly cutting off the top and right (or left, depending on which way you're facing) sides of the player sprites.
+    
+
+# Next major update
 
 - [ ] Improvements
     - [ ] handle coordinating directors
