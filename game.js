@@ -83,6 +83,7 @@ function f_Directions(frame_num, world_map, user_input, actors, directors) {
         } else {
             // TODO: Make this more sophisticated. For now, assume NPC.
             // TODO: Find nearest PC
+            // TODO: Handle coordinating directors as well. Use the director state...
             let target_actor = actors.find( actor => { return actor.actor_type == "player" && actor.enabled } )
             if (target_actor != null) {
                 let target = {y: target_actor.position.y}
@@ -307,6 +308,46 @@ function f_Camera(state, camera) {
     return new_camera
 }
 
+function f_Hud(state, hud) {
+    hud = hud || {left: {}, right: {}}
+    let new_hud = {...hud}
+
+    // Set up the left bar
+    let player = state.world.actors.find( actor => actor.actor_type == "player" )
+    new_hud.left.actor = player
+
+    // Set up the left bar
+    let enemy = state.world.actors.find( actor => actor.enabled && actor.actor_type == "npc" )
+    new_hud.right.actor = enemy
+
+    let max_health_change = 0.1
+    let entries = [ new_hud.left, new_hud.right ]
+    entries.forEach( entry => {
+        if (!entry.actor) {
+            return
+        }
+
+        entry.target = entry.actor.health / entry.actor.full_health 
+
+        // Doesn't have a percent yet, so immediately set it to the target
+        if (!entry.percent) {
+            entry.percent = entry.target
+        } else {
+            if (entry.percent != entry.target) {
+                let delta = entry.target - entry.percent
+                if (entry.percent < entry.target) {
+                    entry.percent += Math.min(max_health_change, delta)
+                } else {
+                    entry.percent += Math.max(-max_health_change, delta)
+                }
+            }
+        }
+    })
+
+
+    return new_hud
+}
+
 function StartGame() {
     let resource_list = [
         "resources/world.yaml",
@@ -361,60 +402,7 @@ function Tick() {
         sprites = sprites.concat(billboard_sprites)
 
         let preprocessed_sprites = PreprocessedSprites(sprites, state.resources, state.camera)
-
-        // TODO: move to hud sprite generator
-        // TODO: all should combine PreprocessedSprites with SpritesFromState
-        let hud_sprites = []
-
-        // TODO: pick whose energy to show
-        //
-        let player = state.world.actors.find( actor => actor.actor_type == "player" )
-        let enemy = state.world.actors.find( actor => actor.enabled && actor.actor_type == "npc" )
-        let actors_and_offset = [
-            {actor: player, offset: 16},
-            {actor: enemy, offset: 160 + 16},
-        ]
-        actors_and_offset.forEach( info => {
-            if (info.actor == null) { return }
-
-            let health_percent = info.actor.health / info.actor.full_health
-            let health_width = 120
-            let x_offset = info.offset
-            let height = 16.0 / 32.0
-
-            let border = {
-                image: state.resources["images/black_rect.png"],
-                position: {x: x_offset-4.0, y: 16 - 4},
-                origin: {x: 0, y: 0},
-                scale: {x: (health_width+8.0)/32.0, y: 24.0/32.0}
-            }
-            hud_sprites.push(border)
-
-            if (health_percent < 1.0) {
-                let x = x_offset + health_percent * health_width
-                let width = (1-health_percent) * health_width / 32.0
-
-                let left_energy_bar_red = {
-                    image: state.resources["images/red_rect.png"],
-                    position: {x: x, y: 16},
-                    origin: {x: 0, y: 0},
-                    scale: {x: width, y: height}
-                }
-                hud_sprites.push(left_energy_bar_red)
-            }
-            if (health_percent > 0.0) {
-                let x = x_offset
-                let width = health_percent * health_width / 32.0
-
-                let left_energy_bar_yellow = {
-                    image: state.resources["images/yellow_rect.png"],
-                    position: {x: x, y: 16},
-                    origin: {x: 0, y: 0},
-                    scale: {x: width, y: height}
-                }
-                hud_sprites.push(left_energy_bar_yellow)
-            }
-        })
+        let hud_sprites = HudSprites(state)
 
         preprocessed_sprites = preprocessed_sprites.concat(hud_sprites)
 
@@ -584,6 +572,7 @@ function f_State(state, user_input) {
     new_state.world.actors_touching = f_ActorsTouching(new_state.world.actors)
 
     new_state.camera = f_Camera(state, state.camera)
+    new_state.hud = f_Hud(state, state.hud)
 
     return new_state
 }
@@ -677,5 +666,54 @@ function PreprocessedSprites(sprites, resources, camera) {
 	})
 
     return output_sprites
+}
+
+function HudSprites(state) {
+    let hud_sprites = []
+    let x_offset = 16
+    let entries = [state.hud.left, state.hud.right]
+    entries.forEach( entry => {
+        if (!entry.actor) { return }
+
+        let health_width = 120
+        let height = 16.0 / 32.0
+
+        let border = {
+            image: state.resources["images/black_rect.png"],
+            position: {x: x_offset-4.0, y: 16 - 4},
+            origin: {x: 0, y: 0},
+            scale: {x: (health_width+8.0)/32.0, y: 24.0/32.0}
+        }
+        hud_sprites.push(border)
+
+        if (entry.percent < 1.0) {
+            let x = x_offset + entry.percent * health_width
+            let width = (1-entry.percent) * health_width / 32.0
+
+            let left_energy_bar_red = {
+                image: state.resources["images/red_rect.png"],
+                position: {x: x, y: 16},
+                origin: {x: 0, y: 0},
+                scale: {x: width, y: height}
+            }
+            hud_sprites.push(left_energy_bar_red)
+        }
+        if (entry.percent > 0.0) {
+            let x = x_offset
+            let width = entry.percent * health_width / 32.0
+
+            let left_energy_bar_yellow = {
+                image: state.resources["images/yellow_rect.png"],
+                position: {x: x, y: 16},
+                origin: {x: 0, y: 0},
+                scale: {x: width, y: height}
+            }
+            hud_sprites.push(left_energy_bar_yellow)
+        }
+
+        x_offset += 160
+    })
+
+    return hud_sprites
 }
 

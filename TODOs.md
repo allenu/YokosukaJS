@@ -13,10 +13,6 @@ TODOs:
     - [x] Move director code to own functions
 
     - [x] Update camera state
-    - [ ] Implement actors (items) that can be picked up
-          * touched by pc once
-          * disappears on touch
-          * runs script on touch (boost hp)
 
     - [x] Simple loop
         - [x] Setting up directors
@@ -39,16 +35,9 @@ TODOs:
                           to new position. 
                         - [x] have a camera target_x that it's always moving to, but camera movement is limited per frame
                         - [x] generally, target_x will be where player's position.x is, but could be limited by bounds
-        - [ ] Show health bar
+        - [x] Show health bar
             - [x] show player's health
-            - [ ] show health of actor player is "interacting" with
-                - [ ] define interaction as
-                    - whoever you've attacked last
-                    - whoever is attacking you
-                    - whoever you are nearest
-                    - expires with flashing over course of 2s when enemy dies
-                    - expires after none of the above, after 5s
-            - [ ] animate energy change over time
+            - [x] animate energy change over time
         - [ ] handle coordinating directors
             - [ ] only one attacker at a time
             - [ ] enemies take turns attacking
@@ -80,6 +69,17 @@ TODOs:
 
 - [ ] Second prototype
     - [x] Load game map and actors from resources file
+    - [ ] show health of actor player is "interacting" with
+        - [ ] define interaction as
+            - whoever you've attacked last
+            - whoever is attacking you
+            - whoever you are nearest
+            - expires with flashing over course of 2s when enemy dies
+            - expires after none of the above, after 5s
+    - [ ] Implement actors (items) that can be picked up
+          * touched by pc once
+          * disappears on touch
+          * runs script on touch (boost hp)
     - [ ] Load top-level description of which maps to load from resources file
     - [ ] State change for presentation
         - [ ] Loading
