@@ -12,6 +12,9 @@ TODOs:
 
 - [ ] Basic prototype
     - [ ] Implement signals
+        - [ ] Make commands execute only once?
+            - this is necessary in cases where the command depends on multiple permanent signals. If not allowed
+              to execute just once, it would fire on every frame...
         - [x] Collect all signals
             - from all animation frames for all enabled actors
             - from all commands
