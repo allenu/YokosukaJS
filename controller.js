@@ -37,6 +37,7 @@ function StartGame() {
             directors: directors,
             requested_directions: [],
             system_directions: [],
+            signals: [],
             user_input: {},
             triggers_fired: [],
             camera: { position: {x: 0, y: 0}, target: {x: 0, y: 0}, size: { width: 320, height: 240 } }

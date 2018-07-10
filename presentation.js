@@ -225,11 +225,13 @@ function f_SpritesFromState(state) {
             let sprite_name = animation_frame.sprite
             let flip = actor.facing_left
             let position = actor.position
+            let scale = actor.scale || {x: 1.0, y: 1.0}
 
 	        return {
                 image: actor.sprites,
                 spritesheet: actor.spritesheet, 
                 sprite_name: sprite_name,
+                scale: scale,
                 flip: flip,
                 position: position
             }

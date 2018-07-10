@@ -64,31 +64,64 @@ actors:
     position: 
       x: 512 
       y: 64
-    health: 5
-    full_health: 5
+    health: 3
+    full_health: 3
     facing_left: true
+    enabled: false
+  - id: npc_3
+    actor_type: npc
+    model: resources/model.yaml
+    sprites: images/ryan.png
+    spritesheet: resources/spritesheet.json
+    state_name: standing
+    frame_index: 0
+    director: bot_2
+    scale: 
+      x: 2.0
+      y: 2.0
+    position: 
+      x: 650 
+      y: 64
+    health: 10
+    full_health: 10
+    facing_left: false
     enabled: false
 
 triggers:
-  - id: npc_1_died
-    trigger_type: npc_remove
-    actor_id: npc_1
-    fired: false
   - id: crossed_line
     trigger_type: left_right_cross
+    actor_type: player
     x: 364
-    fired: false
+    signal: crossed_line
 
 scripts:
     - id: turn_off_boundary
-      trigger: npc_1_died
+      signal: 
+        id: disable_sender
+        sender_id: npc_1
       command:
         command_type: boundary
         boundary_id: boundary_1
-        enable: false
+        enable_boundary: false
     - id: enable_npc_2
-      trigger: crossed_line
+      signal:
+        id: crossed_line
       command:
         command_type: enable_actor
         actor_id: npc_2
+    - id: disable_sender
+      signal: 
+        id: disable_sender
+        sender_type: actor
+      command:
+        command_type: disable_sender
+    - id: enable_npc_3
+      signals:
+        - id: Died
+          sender_id: npc_1
+        - id: Died
+          sender_id: npc_2
+      command:
+        command_type: enable_actor
+        actor_id: npc_3
 

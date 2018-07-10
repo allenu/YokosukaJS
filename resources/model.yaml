@@ -76,7 +76,10 @@ states:
   dying:
     frames:
       - sprite: Hurt 4
-        remove: true
+      - sprite: Hurt 4
+      - sprite: Hurt 4
+      - sprite: Hurt 4
+        signals: disable_sender Died
     uninterruptible: true
 
 groups:

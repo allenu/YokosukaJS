@@ -42,9 +42,10 @@ function f_SystemDirections(frame_num, world_map, resources, user_input, actors,
     return system_directions
 }
 
-function f_Actors(frame_num, world_map, directions, actors, enabled_actors, resources) {
+function f_Actors(frame_num, world_map, directions, actors, enabled_actors, disabled_actors, resources) {
     let new_actors = actors.map( actor => {
         let enable_this_actor = enabled_actors.includes(actor.id)
+        let disable_this_actor = disabled_actors.includes(actor.id)
 
         if (!actor.enabled && !enable_this_actor) {
             return {...actor}
@@ -58,6 +59,8 @@ function f_Actors(frame_num, world_map, directions, actors, enabled_actors, reso
         let new_actor = NextActorState(model, actor, actor_directions)
         if (enable_this_actor) {
             new_actor.enabled = true
+        } else if (disable_this_actor) {
+            new_actor.enabled = false
         }
         return new_actor
     })
@@ -91,22 +94,6 @@ function f_ActorsTouching(actors) {
     return actors_touching
 }
 
-function f_TriggersFired(old_actors, new_actors, triggers) {
-    // For each trigger that has NOT yet fired...
-    //   For each new actor, compare against old actor and see if it triggered
-
-    return []
-}
-
-function f_Triggers(triggers, triggers_fired) {
-    let new_triggers = triggers.map( trigger => {
-        let fired = triggers_fired.includes(trigger.id) || trigger.fired
-        return {...trigger, fired: fired}
-    })
-
-    return new_triggers
-}
-
 function f_State(state, user_input) {
     var new_state = {...state}
     new_state.frame_num += 1
@@ -117,19 +104,53 @@ function f_State(state, user_input) {
 
     // See which actors are enabled by any scripts
     let enabled_actors = []
+    let disabled_actors = []
     let enable_boundaries = []
     let disable_boundaries = []
     state.world.scripts.forEach( script => {
-        if (state.triggers_fired.includes(script.trigger)) {
-            if (script.command.command_type == "enable_actor") {
-                enabled_actors.push(script.command.actor_id)
+        // See if this script's signal predicate matches
+        let required_signals = []
+        if (script.signals) {
+            // More than one signal must match
+            required_signals = script.signals
+        } else {
+            required_signals = [script.signal]
+        }
+
+        let matching_signals = required_signals.reduce( (accumulator, required_signal) => {
+            // See if the required signal is one that was fired in the previous state.
+            let filtered_signals = state.signals.filter( signal => {
+                let matches_sender_id = (required_signal.sender_id == null || required_signal.sender_id == signal.sender_id)
+                let matches_sender_type = (required_signal.sender_type == null || required_signal.sender_type == signal.sender_type)
+                return matches_sender_id && matches_sender_type
+            })
+
+            let source_signal = filtered_signals.find( signal => signal.id == required_signal.id )
+            if (source_signal != null) {
+                return accumulator.concat(source_signal)
+            }
+            return accumulator
+        }, [])
+
+        // If all matching signals were fired, then go ahead and execute the command.
+        if (matching_signals.length == required_signals.length) {
+            if (script.command.command_type == "disable_sender") {
+                let source_signal = matching_signals[0]
+                if (source_signal.sender_type == 'actor') {
+                    let actor = state.world.actors.find( actor => actor.enabled && actor.id == source_signal.sender_id )
+                    if (actor != null) {
+                        disabled_actors.push(actor.id)
+                    }
+                }
             } else if (script.command.command_type == "boundary") {
                 // Toggle boundary setting
-                if (script.command.enable) {
+                if (script.command.enable_boundary) {
                     enable_boundaries.push(script.command.boundary_id)
                 } else {
                     disable_boundaries.push(script.command.boundary_id)
                 }
+            } else if (script.command.command_type == "enable_actor") {
+                enabled_actors.push(script.command.actor_id)
             }
         }
     })
@@ -148,7 +169,7 @@ function f_State(state, user_input) {
     new_state.requested_directions = f_Directions(new_state.frame_num, state.world.map, new_state.user_input, state.world.actors, new_state.directors)
     new_state.system_directions = f_SystemDirections(new_state.frame_num, state.world.map, state.resources, new_state.user_input, state.world.actors, state.world.actors_touching, new_state.directors, new_state.requested_directions)
 
-    new_state.world.actors = f_Actors(new_state.frame_num, state.world.map, new_state.system_directions, state.world.actors, enabled_actors, state.resources)
+    new_state.world.actors = f_Actors(new_state.frame_num, state.world.map, new_state.system_directions, state.world.actors, enabled_actors, disabled_actors, state.resources)
 
     // Update position
     // TODO: Make this more functional
@@ -212,55 +233,41 @@ function f_State(state, user_input) {
         }
     })
 
-    let triggers_fired = []
-    state.world.triggers.forEach( trigger => {
-        if (!trigger.fired) {
-            if (trigger.trigger_type == "npc_remove") {
-                let actor = new_state.world.actors
-                    .find( actor => {
-                        if (actor.enabled && actor.id == trigger.actor_id) {
-                            let model = state.resources[actor.model]
-                            let animation_state = model.states[actor.state_name]
-                            let animation_frame = animation_state.frames[actor.frame_index]
-                            return animation_frame.remove
-                        } else {
-                            return false
-                        }
-                    })
+    let actor_signals = SignalsFromActors(new_state.world.actors, new_state.resources)
 
-                if (actor != null) {
-                    triggers_fired.push(trigger.id)
+    let trigger_signals = []
+    let new_triggers_fired = []
+    state.world.triggers.forEach( trigger => {
+        if (!state.triggers_fired.includes(trigger.id)) {
+            if (trigger.trigger_type == "left_right_cross") {
+                let actors = new_state.world.actors.filter( actor => actor.enabled )
+                if (trigger.actor_type != null) {
+                    actors = actors.filter( actor => trigger.actor_type == trigger.actor_type )
                 }
-            } else if (trigger.trigger_type == "left_right_cross") {
-                // See which player actors crossed the line
-                new_state.world.actors.forEach( actor => {
+                actors.forEach( actor => {
                     let old_actor = state.world.actors.find( old_actor => { return old_actor.id == actor.id } )
                     if (old_actor != null) {
                         if (old_actor.position.x < trigger.x && actor.position.x >= trigger.x) {
-                            triggers_fired.push(trigger.id)
+                            let signal = {
+                                id: trigger.signal,
+                                sender_id: trigger.id,
+                                sender_type: 'trigger'
+                            }
+                            trigger_signals.push(signal)
+                            new_triggers_fired.push(trigger.id)
                         }
                     }
                 })
             }
         }
     })
-    new_state.triggers_fired = triggers_fired
+    // Merge the new triggers with the old ones and remove dupes
+    new_state.triggers_fired = [...state.triggers_fired, ...new_triggers_fired]
 
-    // new_state.triggers_fired = f_TriggersFired(state.world.actors, new_state.world.actors, state.world.triggers)
-    
-    new_state.world.triggers = f_Triggers(state.world.triggers, new_state.triggers_fired)
+    // Keep permanent signals from old state (i.e. those that start with capital letter)
+    let permanent_signals = state.signals.filter( signal => /[A-Z]/.test(signal.id) )
 
-    // Remove any actors that have "remove" set to true
-    new_state.world.actors
-        .filter( actor => actor.enabled )
-        .forEach( actor => {
-        let model = state.resources[actor.model]
-        let animation_state = model.states[actor.state_name]
-        let animation_frame = animation_state.frames[actor.frame_index]
-        if (animation_frame.remove) {
-            actor.enabled = false
-        }
-    })
+    new_state.signals = [...permanent_signals, ...actor_signals, ...trigger_signals]
 
     new_state.world.actors_touching = f_ActorsTouching(new_state.world.actors)
 

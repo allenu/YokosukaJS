@@ -12,21 +12,29 @@ TODOs:
 
 - [ ] Basic prototype
     - [ ] Implement signals
-        - [ ] Collect all signals
+        - [x] Collect all signals
             - from all animation frames for all enabled actors
             - from all commands
             - from any boundaries that are crossed
-        - [ ] Animation model should let you enter a signals like this
+        - [x] Animation model should let you enter a signals like this
             - sprite: Hurt 1
               signals: hurt
         - [ ] Should support uppercase first letter for permanent signals and lowercase first letter for one-frame signals
         - [ ] Implement predicates
-            - [ ] Define the syntax for specifying a signal 
+            - [ ] Handle more than one signal as predicate
+            - [x] Define the syntax for specifying a signal 
                 - maybe using a colon? "signal_name:source_id", something like "remove:npc_1"
-            - [ ] Handle signal from specific actor type (from player)
-            - [ ] Handle multiple permanent signals
+            - [x] Handle signal from specific actor type (from player)
+            - [x] Handle multiple permanent signals
                 - ex: user must have killed off two of the npcs for door to open
-        - [ ] Clear all one-frame signals from frame to frame
+        - [x] Clear all one-frame signals from frame to frame
+        - [ ] Formalize how you specify signal predicates in scripts
+            - must always have signal.id
+            - optional signal.sender_type to limit the type of sender, can be 'actor' for now
+            - optional signal.sender_id to limit WHO the sender can be
+        - [ ] Formalize how triggers work
+            - they only fire once (but maybe allow a command to unset them so they can fire again?)
+            - they fire a signal
     - [ ] Implement timer command
         - [ ] Set signal after time has elapsed
         - [ ] Ensure timer doesn't get set when game engine is paused 
