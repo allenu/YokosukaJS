@@ -1,3 +1,15 @@
+// https://stackoverflow.com/questions/1584370/how-to-merge-two-arrays-in-javascript-and-de-duplicate-items
+Array.prototype.unique = function() {
+    var a = this.concat();
+    for(var i=0; i<a.length; ++i) {
+        for(var j=i+1; j<a.length; ++j) {
+            if(a[i] === a[j])
+                a.splice(j--, 1);
+        }
+    }
+
+    return a;
+};
 
 function f_SystemDirections(frame_num, world_map, resources, user_input, actors, actors_touching, directors, directions) {
     let system_directions = {...directions}
@@ -107,7 +119,12 @@ function f_State(state, user_input) {
     let disabled_actors = []
     let enable_boundaries = []
     let disable_boundaries = []
+    let new_scripts_fired = []
     state.world.scripts.forEach( script => {
+        if (state.scripts_fired.includes(script.id)) {
+            return
+        }
+
         // See if this script's signal predicate matches
         let required_signals = []
         if (script.signals) {
@@ -140,6 +157,9 @@ function f_State(state, user_input) {
                     let actor = state.world.actors.find( actor => actor.enabled && actor.id == source_signal.sender_id )
                     if (actor != null) {
                         disabled_actors.push(actor.id)
+                        if (!script.repeatable) {
+                            new_scripts_fired.push(script.id)
+                        }
                     }
                 }
             } else if (script.command.command_type == "boundary") {
@@ -149,8 +169,14 @@ function f_State(state, user_input) {
                 } else {
                     disable_boundaries.push(script.command.boundary_id)
                 }
+                if (!script.repeatable) {
+                    new_scripts_fired.push(script.id)
+                }
             } else if (script.command.command_type == "enable_actor") {
                 enabled_actors.push(script.command.actor_id)
+                if (!script.repeatable) {
+                    new_scripts_fired.push(script.id)
+                }
             }
         }
     })
@@ -262,7 +288,8 @@ function f_State(state, user_input) {
         }
     })
     // Merge the new triggers with the old ones and remove dupes
-    new_state.triggers_fired = [...state.triggers_fired, ...new_triggers_fired]
+    new_state.triggers_fired = [...state.triggers_fired, ...new_triggers_fired].unique()
+    new_state.scripts_fired = [...state.scripts_fired, ...new_scripts_fired].unique()
 
     // Keep permanent signals from old state (i.e. those that start with capital letter)
     let permanent_signals = state.signals.filter( signal => /[A-Z]/.test(signal.id) )

@@ -40,6 +40,7 @@ function StartGame() {
             signals: [],
             user_input: {},
             triggers_fired: [],
+            scripts_fired: [],
             camera: { position: {x: 0, y: 0}, target: {x: 0, y: 0}, size: { width: 320, height: 240 } }
         }
 

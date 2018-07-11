@@ -115,6 +115,7 @@ scripts:
         sender_type: actor
       command:
         command_type: disable_sender
+      repeatable: true
     - id: enable_npc_3
       signals:
         - id: Died

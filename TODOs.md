@@ -1,18 +1,33 @@
 
 TODOs:
 
-- [ ] Refactor work
-    - [ ] Move top-level driver to its own file
+- [x] Refactor work
+    - [x] Move top-level driver to its own file
         - has Tick()
         - has StartGame()
-    - [ ] Move renderer part to its own file
-    - [ ] Move directors to own file
-    - [ ] break out health stuff to own state? (separate it from actor?)
-    - [ ] move trigger code to own state func
+    - [x] Move renderer part to its own file
+    - [x] Move directors to own file
+    - [x] break out health stuff to own state? (separate it from actor?)
+    - [x] move trigger code to own state func
+
+- [ ] Add UI-level billboards
+    - [ ] add a flag that says these are drawn on the UI level
+    - [ ] position is relative to top-left of screen
+
+- [ ] display version number in demo
+
+- [ ] Documentation
+    - [ ] Formalize how you specify signal predicates in scripts
+        - must always have signal.id
+        - optional signal.sender_type to limit the type of sender, can be 'actor' for now
+        - optional signal.sender_id to limit WHO the sender can be
+    - [ ] Formalize how triggers work
+        - they only fire once (but maybe allow a command to unset them so they can fire again?)
+        - they fire a signal
 
 - [ ] Basic prototype
     - [ ] Implement signals
-        - [ ] Make commands execute only once?
+        - [x] Make commands execute only once?
             - this is necessary in cases where the command depends on multiple permanent signals. If not allowed
               to execute just once, it would fire on every frame...
         - [x] Collect all signals
@@ -22,22 +37,15 @@ TODOs:
         - [x] Animation model should let you enter a signals like this
             - sprite: Hurt 1
               signals: hurt
-        - [ ] Should support uppercase first letter for permanent signals and lowercase first letter for one-frame signals
-        - [ ] Implement predicates
-            - [ ] Handle more than one signal as predicate
+        - [x] Should support uppercase first letter for permanent signals and lowercase first letter for one-frame signals
+        - [x] Implement predicates
+            - [x] Handle more than one signal as predicate
             - [x] Define the syntax for specifying a signal 
                 - maybe using a colon? "signal_name:source_id", something like "remove:npc_1"
             - [x] Handle signal from specific actor type (from player)
             - [x] Handle multiple permanent signals
                 - ex: user must have killed off two of the npcs for door to open
         - [x] Clear all one-frame signals from frame to frame
-        - [ ] Formalize how you specify signal predicates in scripts
-            - must always have signal.id
-            - optional signal.sender_type to limit the type of sender, can be 'actor' for now
-            - optional signal.sender_id to limit WHO the sender can be
-        - [ ] Formalize how triggers work
-            - they only fire once (but maybe allow a command to unset them so they can fire again?)
-            - they fire a signal
     - [ ] Implement timer command
         - [ ] Set signal after time has elapsed
         - [ ] Ensure timer doesn't get set when game engine is paused 
@@ -94,8 +102,7 @@ TODOs:
 # Bugs
 
 [ ] Via reddit
-
-    [ ] as /u/ordinaryinstruction points out, there seems to be an entire frame devoted to turning around, which feels sluggish as you change direction. This probably isn't really a game engine thing though.
+    [x] as /u/ordinaryinstruction points out, there seems to be an entire frame devoted to turning around, which feels sluggish as you change direction. This probably isn't really a game engine thing though.
     [ ] Your texture coordinates seem to be possibly cutting off the top and right (or left, depending on which way you're facing) sides of the player sprites.
     
 
