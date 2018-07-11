@@ -55,7 +55,6 @@ states:
   turn_around:
     frames:
       - sprite: Standing
-      - sprite: Standing
         flip: true
   hurt:
     frames:
