@@ -1,6 +1,66 @@
 
 TODOs:
 
+# Next major update
+
+- [ ] More refactor work
+    - [ ] Clean up the common code at start of f_State()
+    - [ ] Move script code outside of f_State
+
+- [ ] Improvements
+    - [ ] Add text display commands
+    - [ ] Add simple transition animations (commands)
+        - [ ] Enable/Disable a billboard
+        - [ ] Fade in/fade out a billboard
+        - [ ] Move a billboard from one location to another, over a given period of time
+        - [ ] Send signal when animations done
+    - [ ] handle coordinating directors
+        - [ ] only one attacker at a time
+        - [ ] enemies take turns attacking
+        - [ ] all enemies stand at a distance, except for one
+    - [ ] End map condition
+        - [ ] User passes a line
+        - [ ] User dies
+        - [ ] Run script command to transition to another screen or display text and pause game state (?)
+    - [ ] add web audio
+    - [ ] add "reset" button to demo
+    - [ ] actors should be dictionary and not array
+    - [ ] Generalize the properties in the animation frames
+          - instead of using the 'remove' property, add trigger properties that can be used to fire triggers/scripts
+    - [ ] Have triggers that can fire multiple times and some that only fire once
+    - [ ] Allow for multiple trigger criteria (i.e. don't use trigger id for triggers as a unique key in the list)
+    - [ ] make spritesheet.json's images list a dictionary instead of array
+    - [ ] Support coordinated directors, where they share information and can coordinate attacks
+    - [ ] resilience
+          - [ ] display ugly icon when image missing
+
+- [ ] Second prototype
+    - [ ] Dialog box
+
+    - [x] Load game map and actors from resources file
+    - [ ] show health of actor player is "interacting" with
+        - [ ] define interaction as
+            - whoever you've attacked last
+            - whoever is attacking you
+            - whoever you are nearest
+            - expires with flashing over course of 2s when enemy dies
+            - expires after none of the above, after 5s
+    - [ ] Implement actors (items) that can be picked up
+          * touched by pc once
+          * disappears on touch
+          * runs script on touch (boost hp)
+    - [ ] Load top-level description of which maps to load from resources file
+    - [ ] State change for presentation
+        - [ ] Loading
+        - [ ] Playing
+        - [ ] Ending level play
+        - [ ] play/pause
+    - [ ] Load new map when exiting current one
+    - [ ] Enemies
+        - [ ] Scripted to load when player is nearby
+        - [ ] Only load one at a time (i.e. can't trigger same entity more than once)
+     - [ ] Animata state transitions
+
 - [x] Refactor work
     - [x] Move top-level driver to its own file
         - has Tick()
@@ -49,11 +109,6 @@ TODOs:
     - [x] Implement timer command
         - [x] Set signal after time has elapsed
         - [x] Ensure timer doesn't get set when game engine is paused 
-    - [ ] Add simple transition animations (commands)
-        - [ ] Enable/Disable a billboard
-        - [ ] Fade in/fade out a billboard
-        - [ ] Move a billboard from one location to another, over a given period of time
-        - [ ] Send signal when animations done
             
     - [x] Load frame for character
     - [x] Load a few tile images
@@ -106,55 +161,6 @@ TODOs:
     [ ] Your texture coordinates seem to be possibly cutting off the top and right (or left, depending on which way you're facing) sides of the player sprites.
     
 
-# Next major update
-
-- [ ] Improvements
-    - [ ] handle coordinating directors
-        - [ ] only one attacker at a time
-        - [ ] enemies take turns attacking
-        - [ ] all enemies stand at a distance, except for one
-    - [ ] End map condition
-        - [ ] User passes a line
-        - [ ] User dies
-        - [ ] Run script command to transition to another screen or display text and pause game state (?)
-    - [ ] add web audio
-    - [ ] add "reset" button to demo
-    - [ ] actors should be dictionary and not array
-    - [ ] Generalize the properties in the animation frames
-          - instead of using the 'remove' property, add trigger properties that can be used to fire triggers/scripts
-    - [ ] Have triggers that can fire multiple times and some that only fire once
-    - [ ] Allow for multiple trigger criteria (i.e. don't use trigger id for triggers as a unique key in the list)
-    - [ ] make spritesheet.json's images list a dictionary instead of array
-    - [ ] Support coordinated directors, where they share information and can coordinate attacks
-    - [ ] resilience
-          - [ ] display ugly icon when image missing
-
-- [ ] Second prototype
-    - [ ] Dialog box
-
-    - [x] Load game map and actors from resources file
-    - [ ] show health of actor player is "interacting" with
-        - [ ] define interaction as
-            - whoever you've attacked last
-            - whoever is attacking you
-            - whoever you are nearest
-            - expires with flashing over course of 2s when enemy dies
-            - expires after none of the above, after 5s
-    - [ ] Implement actors (items) that can be picked up
-          * touched by pc once
-          * disappears on touch
-          * runs script on touch (boost hp)
-    - [ ] Load top-level description of which maps to load from resources file
-    - [ ] State change for presentation
-        - [ ] Loading
-        - [ ] Playing
-        - [ ] Ending level play
-        - [ ] play/pause
-    - [ ] Load new map when exiting current one
-    - [ ] Enemies
-        - [ ] Scripted to load when player is nearby
-        - [ ] Only load one at a time (i.e. can't trigger same entity more than once)
-     - [ ] Animata state transitions
 
 - [x] Set up the "view" specific code
     - [x] keyboard listeners
