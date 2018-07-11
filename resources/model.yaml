@@ -87,6 +87,7 @@ groups:
     - kicking
   standing_walking:
     - standing
+    - turn_around
     - walking_fwd
     - walking_down
     - walking_up
