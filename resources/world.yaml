@@ -21,6 +21,19 @@ billboards:
       scale:
         x: 1.5
         y: 1.5
+    - filename: images/game-over.png
+      id: game-over
+      billboard_type: ui
+      hidden: true
+      position:
+        x: 160
+        y: 120
+      origin:
+        x: 192
+        y: 30
+      scale:
+        x: 0.7
+        y: 0.7
 
 actors:
   - id: npc_1
@@ -125,4 +138,27 @@ scripts:
       command:
         command_type: enable_actor
         actor_id: npc_3
+    - id: show-game-over
+      signal: 
+        id: disable_sender
+        sender_id: npc_3
+      command:
+        command_type: toggle_billboard
+        billboard_id: game-over
+        hidden: false
+    - id: delay-hide
+      signal:
+        id: disable_sender
+        sender_id: npc_3
+      command:
+        command_type: future_signal
+        delay: 2.0
+        signal: hide-game-over
+    - id: hide-game-over
+      signal:
+        id: hide-game-over
+      command:
+        command_type: toggle_billboard
+        billboard_id: game-over
+        hidden: true
 

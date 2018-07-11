@@ -161,6 +161,18 @@ function PreprocessedSprites(sprites, resources, camera) {
 
 function HudSprites(state) {
     let hud_sprites = []
+
+    let ui_billboard_sprites = state.world.billboards.filter( billboard => !billboard.hidden && billboard.billboard_type == 'ui' )
+        .map( billboard => {
+            let position = {x: billboard.position.x - billboard.origin.x*billboard.scale.x,
+                            y: billboard.position.y - billboard.origin.y*billboard.scale.y,}
+            return {
+                image: state.resources[billboard.filename],
+                position: position,
+                scale: billboard.scale
+            }
+        })
+
     let x_offset = 16
     let entries = [state.hud.left, state.hud.right]
     entries.forEach( entry => {
@@ -205,11 +217,11 @@ function HudSprites(state) {
         x_offset += 160
     })
 
-    return hud_sprites
+    return ui_billboard_sprites.concat(hud_sprites)
 }
 
 function f_SpritesFromState(state) {
-    let sprites = state.world.actors.filter( actor => { return actor.enabled } )
+    let actor_sprites = state.world.actors.filter( actor => { return actor.enabled } )
         .map( actor => {
             let model = state.resources[actor.model]
 
@@ -236,6 +248,16 @@ function f_SpritesFromState(state) {
                 position: position
             }
         })
-    return sprites
+    let world_billboard_sprites = state.world.billboards.filter( billboard => !billboard.hidden && billboard.billboard_type != 'ui' )
+        .map( billboard => {
+        return {
+            image: billboard.filename,
+            position: billboard.position,
+            origin: billboard.origin,
+            scale: billboard.scale
+        }
+    })
+
+    return actor_sprites.concat(world_billboard_sprites)
 }
 

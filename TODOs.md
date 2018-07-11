@@ -10,9 +10,9 @@ TODOs:
     - [x] break out health stuff to own state? (separate it from actor?)
     - [x] move trigger code to own state func
 
-- [ ] Add UI-level billboards
-    - [ ] add a flag that says these are drawn on the UI level
-    - [ ] position is relative to top-left of screen
+- [x] Add UI-level billboards
+    - [x] add a flag that says these are drawn on the UI level
+    - [x] position is relative to top-left of screen
 
 - [ ] display version number in demo
 
@@ -46,9 +46,9 @@ TODOs:
             - [x] Handle multiple permanent signals
                 - ex: user must have killed off two of the npcs for door to open
         - [x] Clear all one-frame signals from frame to frame
-    - [ ] Implement timer command
-        - [ ] Set signal after time has elapsed
-        - [ ] Ensure timer doesn't get set when game engine is paused 
+    - [x] Implement timer command
+        - [x] Set signal after time has elapsed
+        - [x] Ensure timer doesn't get set when game engine is paused 
     - [ ] Add simple transition animations (commands)
         - [ ] Enable/Disable a billboard
         - [ ] Fade in/fade out a billboard

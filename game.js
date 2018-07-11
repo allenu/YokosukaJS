@@ -106,13 +106,18 @@ function f_ActorsTouching(actors) {
     return actors_touching
 }
 
-function f_State(state, user_input) {
-    var new_state = {...state}
+function f_State(state, user_input, time) {
+    var new_state = {...state, time: time}
     new_state.frame_num += 1
     new_state.user_input = user_input
     new_state.world = {...state.world}
 
     new_state.directors = f_Directors(new_state.frame_num, state.world.map, new_state.user_input, state.world.actors, state.directors)
+
+    let futured_signals = state.future_signals.filter(future_signal => future_signal.time <= time)
+    new_state.future_signals = state.future_signals.filter(future_signal => future_signal.time > time)
+
+    let signals_from_last_state = futured_signals.concat(state.signals)
 
     // See which actors are enabled by any scripts
     let enabled_actors = []
@@ -120,6 +125,8 @@ function f_State(state, user_input) {
     let enable_boundaries = []
     let disable_boundaries = []
     let new_scripts_fired = []
+    let show_billboards = []
+    let hide_billboards = []
     state.world.scripts.forEach( script => {
         if (state.scripts_fired.includes(script.id)) {
             return
@@ -136,7 +143,7 @@ function f_State(state, user_input) {
 
         let matching_signals = required_signals.reduce( (accumulator, required_signal) => {
             // See if the required signal is one that was fired in the previous state.
-            let filtered_signals = state.signals.filter( signal => {
+            let filtered_signals = signals_from_last_state.filter( signal => {
                 let matches_sender_id = (required_signal.sender_id == null || required_signal.sender_id == signal.sender_id)
                 let matches_sender_type = (required_signal.sender_type == null || required_signal.sender_type == signal.sender_type)
                 return matches_sender_id && matches_sender_type
@@ -177,8 +184,40 @@ function f_State(state, user_input) {
                 if (!script.repeatable) {
                     new_scripts_fired.push(script.id)
                 }
+            } else if (script.command.command_type == "toggle_billboard") {
+                let hidden = script.command.hidden || false
+                if (hidden) {
+                    hide_billboards.push(script.command.billboard_id)
+                } else {
+                    show_billboards.push(script.command.billboard_id)
+                }
+
+                if (!script.repeatable) {
+                    new_scripts_fired.push(script.id)
+                }
+            } else if (script.command.command_type == "future_signal") {
+                let future_signal = { 
+                    id: script.command.signal, 
+                    sender_id: script.id,
+                    sender_type: "script",
+                    time: new_state.time + script.command.delay }
+                new_state.future_signals.push(future_signal)
+                if (!script.repeatable) {
+                    new_scripts_fired.push(script.id)
+                }
             }
         }
+    })
+
+    // Toggle billboards
+    new_state.world.billboards = state.world.billboards.map( billboard => {
+        let new_billboard = {...billboard}
+        if (show_billboards.includes(billboard.id)) {
+            new_billboard.hidden = false
+        } else if (hide_billboards.includes(billboard.id)) {
+            new_billboard.hidden = true
+        }
+        return new_billboard
     })
 
     // Toggle boundaries
@@ -292,7 +331,7 @@ function f_State(state, user_input) {
     new_state.scripts_fired = [...state.scripts_fired, ...new_scripts_fired].unique()
 
     // Keep permanent signals from old state (i.e. those that start with capital letter)
-    let permanent_signals = state.signals.filter( signal => /[A-Z]/.test(signal.id) )
+    let permanent_signals = signals_from_last_state.filter( signal => /[A-Z]/.test(signal.id) )
 
     new_state.signals = [...permanent_signals, ...actor_signals, ...trigger_signals]
 
