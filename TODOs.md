@@ -4,8 +4,50 @@ TODOs:
 # Next major update
 
 - [ ] More refactor work
+    - [ ] Set up two examples to test against
+        - [ ] side scroller example
+        - [ ] overhead example
+
+    - [ ] support multiple commands in scripts
+        - [ ] allow a separate "commands:" field if there is more than one
+        - [ ] sender_id should be set for all commands...
+
+    - [ ] DESIGN BUG: currently, it's not possible to run a given script multiple times if the criteria matches multiple signals.
+        - i.e. if two actors send the "disable_sender" signal on a frame, it will only get called once, on the first actor that
+          matches the criteria.
+        - [ ] Make it so that each signal is tested against all scripts. That is, have an outer loop that goes through all signals
+              and an inner loop that matches against scripts, instead of what we have now (an outer loop that goes through all
+              scripts and an inner loop that matches the *first* signal).
+              - This gets super complicated, however, if we have multiple signal predicates on a script... if a script depends on
+                signals A and B, we only want it to run once if A and B are true. We don't want it to execute on B and A as well...
+              - Possible solution: only test multiple signals on *repeatable* scripts that have only one predicate where the
+                predicate is generic (ex: sender_type: actor). Possibly just call it a wildcard script instead of repeatable...
+                If it's a wildcard it means it can match multiple signals at any time, so it's inherently repeatable.
+                - Code could look like this:
+                  - separate scripts into those that are wildcards and those that are not
+                  - treat non-wildcard scripts as before: go through each and see if predicate matches based on signals provided
+                  - then, for each wildcard script, 
+                    - for each signal, see if it matches the predicate, if so, execute those commands for this sender_id
+                - call it 'multimatch' signal instead of wildcard
+              - Another solution: get rid of the idea of multiple signals matching a script... it's only useful at the moment
+                for the disable_sender case... Are there other scenarios where we could find it useful to fire script commands
+                multiple times?
+                - we could encode special effects via scripts... we could, for instance, create a billboard where an actor
+                  is based on a signal given off by a particular animation frame...
+                - we may also send out multiple future signals (with different senders) and want to make sure they all
+                  execute the same script and not just have it run once
+              - Some other special cases that are more system cases:
+                - if two or more actors send a "grunt" signal, we'd like to play the sound effect multiples if they are unique
+                  sound effects for each actor.
+                - only shake ground once even if multiple "hit the ground" signals are sent by multiple actors
+
     - [ ] Clean up the common code at start of f_State()
+    - [ ] separate actor position from actor animation state frames etc. the physics system is separate.
+
     - [ ] Move script code outside of f_State
+    - [ ] Move all invariants to state.invariants ?
+        - The idea is that all else goes into state.variants. So actor states is a combination of invariant + variant properties
+        - Triggers that fire are all in variants, as well as scripts that have executed over time.
 
 - [ ] Improvements
     - [ ] Add text display commands

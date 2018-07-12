@@ -113,6 +113,7 @@ scripts:
         id: disable_sender
         sender_id: npc_1
       command:
+        target: boundary
         command_type: boundary
         boundary_id: boundary_1
         enable_boundary: false
@@ -120,15 +121,17 @@ scripts:
       signal:
         id: crossed_line
       command:
+        target: actor
         command_type: enable_actor
         actor_id: npc_2
     - id: disable_sender
       signal: 
         id: disable_sender
+        multimatch: true
         sender_type: actor
       command:
+        target: actor
         command_type: disable_sender
-      repeatable: true
     - id: enable_npc_3
       signals:
         - id: Died
@@ -136,6 +139,7 @@ scripts:
         - id: Died
           sender_id: npc_2
       command:
+        target: actor
         command_type: enable_actor
         actor_id: npc_3
     - id: show-game-over
@@ -143,6 +147,7 @@ scripts:
         id: disable_sender
         sender_id: npc_3
       command:
+        target: billboard
         command_type: toggle_billboard
         billboard_id: game-over
         hidden: false
@@ -151,6 +156,7 @@ scripts:
         id: disable_sender
         sender_id: npc_3
       command:
+        target: future_signal
         command_type: future_signal
         delay: 2.0
         signal: hide-game-over
@@ -158,6 +164,7 @@ scripts:
       signal:
         id: hide-game-over
       command:
+        target: billboard
         command_type: toggle_billboard
         billboard_id: game-over
         hidden: true

@@ -11,101 +11,6 @@ Array.prototype.unique = function() {
     return a;
 };
 
-function f_SystemDirections(frame_num, world_map, resources, user_input, actors, actors_touching, directors, directions) {
-    let system_directions = {...directions}
-
-    // TODO: Change direction in various ways:
-    // - if standing on air and not falling, do falling direction
-    // - if walking into a wall, do pushing animation
-    //
-    // Attack an actor if some other actor of the opposite type is attacking him.
-    for (var actor_id in actors_touching) {
-        // See if this is being attacked by the opposite actor type. Only actors may attack the opposite type,
-        // never their own.
-        let opposite_actor_type = "player"
-        let actor = actors.find( actor => { return actor.id == actor_id } )
-        if (actor.actor_type == "player") {
-            opposite_actor_type = "npc"
-        }
-
-        let actors_touching_me = actors_touching[actor_id]
-	    let is_being_attacked = actors_touching_me.reduce( (acc, other_actor_id) => {
-            if (acc == false) {
-                let other_actor = actors.find( actor => { return actor.id == other_actor_id } )
-                if (other_actor != null && other_actor.actor_type == opposite_actor_type) {
-                    let model = resources[other_actor.model]
-                    let animation_state = model.states[other_actor.state_name]
-                    let animation_frame = animation_state.frames[other_actor.frame_index]
-                    if (animation_frame.attack > 0) {
-                        acc = true
-                    }
-                }
-            }
-            return acc
-	    }, false)
-
-        if (actor.health <= 0) {
-		    system_directions[actor_id] = [ "die" ]
-        } else if (is_being_attacked) {
-		    system_directions[actor_id] = [ "hurt" ]
-	    }
-    }
-
-    return system_directions
-}
-
-function f_Actors(frame_num, world_map, directions, actors, enabled_actors, disabled_actors, resources) {
-    let new_actors = actors.map( actor => {
-        let enable_this_actor = enabled_actors.includes(actor.id)
-        let disable_this_actor = disabled_actors.includes(actor.id)
-
-        if (!actor.enabled && !enable_this_actor) {
-            return {...actor}
-        }
-
-        let actor_directions = directions[actor.id]
-        if (actor_directions == null) {
-            actor_directions = []
-        }
-        let model = resources[actor.model]
-        let new_actor = NextActorState(model, actor, actor_directions)
-        if (enable_this_actor) {
-            new_actor.enabled = true
-        } else if (disable_this_actor) {
-            new_actor.enabled = false
-        }
-        return new_actor
-    })
-    return new_actors
-}
-
-function f_ActorsTouching(actors) {
-    let actors_touching = {}
-
-    // TODO: Optimize this. Right now it's O(n^2).
-    actors
-        .filter( actor => actor.enabled )
-        .forEach( actor => {
-        let touching_actor = []
-
-        actors
-            .filter( actor => actor.enabled )
-            .forEach( other_actor => {
-            if (other_actor.id != actor.id) {
-                var x_squared = Math.pow((actor.position.x - other_actor.position.x), 2)
-                var y_squared = Math.pow((actor.position.y - other_actor.position.y), 2)
-                var distance = Math.sqrt(x_squared + y_squared)
-                if (distance <= 32.0) {
-                    touching_actor.push(other_actor.id)
-                }
-            }
-        })
-        actors_touching[actor.id] = touching_actor
-    })
-    
-    return actors_touching
-}
-
 function f_State(state, user_input, time) {
     var new_state = {...state, time: time}
     new_state.frame_num += 1
@@ -117,14 +22,47 @@ function f_State(state, user_input, time) {
     let futured_signals = state.future_signals.filter(future_signal => future_signal.time <= time)
     new_state.future_signals = state.future_signals.filter(future_signal => future_signal.time > time)
 
-    let signals_from_last_state = futured_signals.concat(state.signals)
+    let signals_fired = futured_signals.concat(state.signals)
+    let scripts_to_execute = state.world.scripts.filter( script => {
+        let allowed_to_fire = (!state.scripts_fired.includes(script.id) || (script.signal != null && script.signal.multimatch))
+        return (allowed_to_fire && ScriptIsExecutable(script, signals_fired))
+    })
+    let new_scripts_fired = scripts_to_execute.map( script => script.id )
+    new_state.scripts_fired = [...state.scripts_fired, ...new_scripts_fired].unique()
+
+    // Generate a list of all commands from the scripts to execute. Note that there are two types of scripts:
+    // 1. those that execute only once on the first signal that ever matches
+    // 2. those that fire multiple times on any signal that matches the criteria (multimatch)
+    // TODO: having script.signals and script.signal is clumsy
+    let one_time_scripts = scripts_to_execute.filter( script => script.signals != null || !script.signal.multimatch )
+    let multimatch_scripts = scripts_to_execute.filter( script => script.signals == null && script.signal.multimatch )
+
+    // TODO: handle multiple commands and concat them all
+    let one_time_commands = one_time_scripts.map(script => script.command)
+    let multimatch_commands = []
+    signals_fired.forEach( signal => {
+        multimatch_scripts.forEach( script => {
+            if (script.signal.id == signal.id && (script.signal.sender_type == null || script.signal.sender_type == signal.sender_type)) {
+                // TODO: handle multiple commands per script
+                let command = { ...script.command, sender_id: signal.sender_id }
+                multimatch_commands.push(command)
+            }
+        })
+    })
+    let commands = one_time_commands.concat(multimatch_commands)
+    if (commands.length > 0) {
+        console.log("commands: ")
+        console.log(commands)
+    }
 
     // See which actors are enabled by any scripts
-    let enabled_actors = []
-    let disabled_actors = []
+    // TODO: Turn these into a command pattern: ex: to enable an actor
+    // { object_type: "actor",
+    //   properties: [ { "enable" : true } ],
+    //   object_id: "player"
+    // }
     let enable_boundaries = []
     let disable_boundaries = []
-    let new_scripts_fired = []
     let show_billboards = []
     let hide_billboards = []
     state.world.scripts.forEach( script => {
@@ -143,7 +81,7 @@ function f_State(state, user_input, time) {
 
         let matching_signals = required_signals.reduce( (accumulator, required_signal) => {
             // See if the required signal is one that was fired in the previous state.
-            let filtered_signals = signals_from_last_state.filter( signal => {
+            let filtered_signals = signals_fired.filter( signal => {
                 let matches_sender_id = (required_signal.sender_id == null || required_signal.sender_id == signal.sender_id)
                 let matches_sender_type = (required_signal.sender_type == null || required_signal.sender_type == signal.sender_type)
                 return matches_sender_id && matches_sender_type
@@ -158,31 +96,12 @@ function f_State(state, user_input, time) {
 
         // If all matching signals were fired, then go ahead and execute the command.
         if (matching_signals.length == required_signals.length) {
-            if (script.command.command_type == "disable_sender") {
-                let source_signal = matching_signals[0]
-                if (source_signal.sender_type == 'actor') {
-                    let actor = state.world.actors.find( actor => actor.enabled && actor.id == source_signal.sender_id )
-                    if (actor != null) {
-                        disabled_actors.push(actor.id)
-                        if (!script.repeatable) {
-                            new_scripts_fired.push(script.id)
-                        }
-                    }
-                }
-            } else if (script.command.command_type == "boundary") {
+            if (script.command.command_type == "boundary") {
                 // Toggle boundary setting
                 if (script.command.enable_boundary) {
                     enable_boundaries.push(script.command.boundary_id)
                 } else {
                     disable_boundaries.push(script.command.boundary_id)
-                }
-                if (!script.repeatable) {
-                    new_scripts_fired.push(script.id)
-                }
-            } else if (script.command.command_type == "enable_actor") {
-                enabled_actors.push(script.command.actor_id)
-                if (!script.repeatable) {
-                    new_scripts_fired.push(script.id)
                 }
             } else if (script.command.command_type == "toggle_billboard") {
                 let hidden = script.command.hidden || false
@@ -191,10 +110,6 @@ function f_State(state, user_input, time) {
                 } else {
                     show_billboards.push(script.command.billboard_id)
                 }
-
-                if (!script.repeatable) {
-                    new_scripts_fired.push(script.id)
-                }
             } else if (script.command.command_type == "future_signal") {
                 let future_signal = { 
                     id: script.command.signal, 
@@ -202,9 +117,6 @@ function f_State(state, user_input, time) {
                     sender_type: "script",
                     time: new_state.time + script.command.delay }
                 new_state.future_signals.push(future_signal)
-                if (!script.repeatable) {
-                    new_scripts_fired.push(script.id)
-                }
             }
         }
     })
@@ -234,7 +146,7 @@ function f_State(state, user_input, time) {
     new_state.requested_directions = f_Directions(new_state.frame_num, state.world.map, new_state.user_input, state.world.actors, new_state.directors)
     new_state.system_directions = f_SystemDirections(new_state.frame_num, state.world.map, state.resources, new_state.user_input, state.world.actors, state.world.actors_touching, new_state.directors, new_state.requested_directions)
 
-    new_state.world.actors = f_Actors(new_state.frame_num, state.world.map, new_state.system_directions, state.world.actors, enabled_actors, disabled_actors, state.resources)
+    new_state.world.actors = f_Actors(new_state.frame_num, state.world.map, new_state.system_directions, state.world.actors, commands, state.resources)
 
     // Update position
     // TODO: Make this more functional
@@ -328,10 +240,9 @@ function f_State(state, user_input, time) {
     })
     // Merge the new triggers with the old ones and remove dupes
     new_state.triggers_fired = [...state.triggers_fired, ...new_triggers_fired].unique()
-    new_state.scripts_fired = [...state.scripts_fired, ...new_scripts_fired].unique()
 
     // Keep permanent signals from old state (i.e. those that start with capital letter)
-    let permanent_signals = signals_from_last_state.filter( signal => /[A-Z]/.test(signal.id) )
+    let permanent_signals = signals_fired.filter( signal => /[A-Z]/.test(signal.id) )
 
     new_state.signals = [...permanent_signals, ...actor_signals, ...trigger_signals]
 
