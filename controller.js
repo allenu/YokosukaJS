@@ -73,10 +73,76 @@ function Tick() {
         preprocessed_sprites = preprocessed_sprites.concat(hud_sprites)
 
         RenderSprites(g_canvas, preprocessed_sprites)
+
+        // Play audio
+        let signal_ids = state.signals.map(signal => signal.id)
+        if (signal_ids.includes("sfx_oof")) {
+            console.log("oof")
+            PlayNote()
+        }
     }
 
 	// Set up next tick call
 	const time_delta = 1000.0 / g_framerate
 	setTimeout(Tick, time_delta)
+}
+
+function PlayNote() {
+    let envelope = {
+        attack_time: 0.05,
+        attack_gain: 1.0,
+        decay_time: 0.1,
+        sustain_gain: 0.8,
+        release_time: 0.5,
+    }
+
+    let noise = {
+        oscillator: kNoiseWave,
+        envelope: envelope,
+    }
+    let square = {
+        oscillator: kSquareWave,
+        envelope: envelope,
+    }
+
+    let synth_commands = [
+        {
+            action_type: kSynthesizerAction_PlayTone,
+            channel: 0,
+            instrument: noise,
+            freq: 220,
+            time: g_audio_time + 0.05
+        },
+        {
+            action_type: kSynthesizerAction_ReleaseTone,
+            channel: 0,
+            time: g_audio_time + 0.2
+        },
+        {
+            action_type: kSynthesizerAction_PlayTone,
+            channel: 1,
+            instrument: square,
+            freq: 140,
+            time: g_audio_time
+        },
+        {
+            action_type: kSynthesizerAction_ReleaseTone,
+            channel: 1,
+            time: g_audio_time + 0.1
+        },
+        {
+            action_type: kSynthesizerAction_PlayTone,
+            channel: 2,
+            instrument: square,
+            freq: 70,
+            time: g_audio_time + 0.1
+        },
+        {
+            action_type: kSynthesizerAction_ReleaseTone,
+            channel: 2,
+            time: g_audio_time + 0.4
+        },
+    ]
+    g_synthesizer = f_next_synthesizer_state(g_synthesizer, synth_commands)
 }
 

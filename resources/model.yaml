@@ -61,6 +61,7 @@ states:
       - sprite: Hurt 1
         spark: true
         health_hit: 1
+        signals: sfx_oof
       - sprite: Hurt 2
       - sprite: Hurt 3
       - sprite: Hurt 4
