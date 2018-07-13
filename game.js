@@ -55,14 +55,6 @@ function f_State(state, user_input, time) {
         console.log(commands)
     }
 
-    // See which actors are enabled by any scripts
-    // TODO: Turn these into a command pattern: ex: to enable an actor
-    // { object_type: "actor",
-    //   properties: [ { "enable" : true } ],
-    //   object_id: "player"
-    // }
-    let show_billboards = []
-    let hide_billboards = []
     state.world.scripts.forEach( script => {
         if (state.scripts_fired.includes(script.id)) {
             return
@@ -94,14 +86,7 @@ function f_State(state, user_input, time) {
 
         // If all matching signals were fired, then go ahead and execute the command.
         if (matching_signals.length == required_signals.length) {
-            if (script.command.command_type == "toggle_billboard") {
-                let hidden = script.command.hidden || false
-                if (hidden) {
-                    hide_billboards.push(script.command.billboard_id)
-                } else {
-                    show_billboards.push(script.command.billboard_id)
-                }
-            } else if (script.command.command_type == "future_signal") {
+            if (script.command.command_type == "future_signal") {
                 let future_signal = { 
                     id: script.command.signal, 
                     sender_id: script.id,
@@ -112,17 +97,7 @@ function f_State(state, user_input, time) {
         }
     })
 
-    // Toggle billboards
-    new_state.world.billboards = state.world.billboards.map( billboard => {
-        let new_billboard = {...billboard}
-        if (show_billboards.includes(billboard.id)) {
-            new_billboard.hidden = false
-        } else if (hide_billboards.includes(billboard.id)) {
-            new_billboard.hidden = true
-        }
-        return new_billboard
-    })
-
+    new_state.world.billboards = f_Billboards(state.world.billboards, commands)
     new_state.world.map.boundaries = f_Boundaries(state.world.map.boundaries, commands)
 
     new_state.requested_directions = f_Directions(new_state.frame_num, state.world.map, new_state.user_input, state.world.actors, new_state.directors)

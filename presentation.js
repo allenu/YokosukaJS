@@ -261,3 +261,19 @@ function f_SpritesFromState(state) {
     return actor_sprites.concat(world_billboard_sprites)
 }
 
+function f_Billboards(billboards, commands) {
+    let new_billboards = billboards.map( billboard => {
+        let new_billboard = {...billboard}
+
+        commands.forEach( command => {
+            if (command.target == "billboard" && command.billboard_id == billboard.id) {
+                new_billboard.hidden = command.hidden || false
+            }
+        })
+
+        return new_billboard
+    })
+
+    return new_billboards
+}
+
