@@ -11,6 +11,23 @@ Array.prototype.unique = function() {
     return a;
 };
 
+function f_FutureSignals(future_signals, time, commands) {
+    let new_future_signals = state.future_signals.filter(future_signal => future_signal.time > time)
+
+    commands.forEach( command => {
+        if (command.target == "future_signal") {
+            let future_signal = { 
+                id: command.signal, 
+                sender_id: "script", // TODO: does this matter at all? sender_id isn't that useful here is it?
+                sender_type: "script",
+                time: time + command.delay }
+            new_future_signals.push(future_signal)
+        }
+    })
+
+    return new_future_signals
+}
+
 function f_State(state, user_input, time) {
     var new_state = {...state, time: time}
     new_state.frame_num += 1
@@ -20,7 +37,7 @@ function f_State(state, user_input, time) {
     new_state.directors = f_Directors(new_state.frame_num, state.world.map, new_state.user_input, state.world.actors, state.directors)
 
     let futured_signals = state.future_signals.filter(future_signal => future_signal.time <= time)
-    new_state.future_signals = state.future_signals.filter(future_signal => future_signal.time > time)
+    // new_state.future_signals = state.future_signals.filter(future_signal => future_signal.time > time)
 
     let signals_fired = futured_signals.concat(state.signals)
     let scripts_to_execute = state.world.scripts.filter( script => {
@@ -55,48 +72,7 @@ function f_State(state, user_input, time) {
         console.log(commands)
     }
 
-    state.world.scripts.forEach( script => {
-        if (state.scripts_fired.includes(script.id)) {
-            return
-        }
-
-        // See if this script's signal predicate matches
-        let required_signals = []
-        if (script.signals) {
-            // More than one signal must match
-            required_signals = script.signals
-        } else {
-            required_signals = [script.signal]
-        }
-
-        let matching_signals = required_signals.reduce( (accumulator, required_signal) => {
-            // See if the required signal is one that was fired in the previous state.
-            let filtered_signals = signals_fired.filter( signal => {
-                let matches_sender_id = (required_signal.sender_id == null || required_signal.sender_id == signal.sender_id)
-                let matches_sender_type = (required_signal.sender_type == null || required_signal.sender_type == signal.sender_type)
-                return matches_sender_id && matches_sender_type
-            })
-
-            let source_signal = filtered_signals.find( signal => signal.id == required_signal.id )
-            if (source_signal != null) {
-                return accumulator.concat(source_signal)
-            }
-            return accumulator
-        }, [])
-
-        // If all matching signals were fired, then go ahead and execute the command.
-        if (matching_signals.length == required_signals.length) {
-            if (script.command.command_type == "future_signal") {
-                let future_signal = { 
-                    id: script.command.signal, 
-                    sender_id: script.id,
-                    sender_type: "script",
-                    time: new_state.time + script.command.delay }
-                new_state.future_signals.push(future_signal)
-            }
-        }
-    })
-
+    new_state.future_signals = f_FutureSignals(state.future_signals, time, commands)
     new_state.world.billboards = f_Billboards(state.world.billboards, commands)
     new_state.world.map.boundaries = f_Boundaries(state.world.map.boundaries, commands)
 

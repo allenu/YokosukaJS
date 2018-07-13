@@ -95,8 +95,8 @@ actors:
     position: 
       x: 650 
       y: 64
-    health: 10
-    full_health: 10
+    health: 5
+    full_health: 5
     facing_left: false
     enabled: false
 
