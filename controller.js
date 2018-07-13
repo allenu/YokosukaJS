@@ -62,8 +62,8 @@ function Tick() {
 
         state = f_State(state, user_input, g_time)
 
-        console.log("Tick. " + state.frame_num) 
-        console.log(state)
+        //console.log("Tick. " + state.frame_num) 
+        //console.log(state)
 
         let sprites = f_SpritesFromState(state)
 

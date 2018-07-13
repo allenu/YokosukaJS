@@ -61,8 +61,6 @@ function f_State(state, user_input, time) {
     //   properties: [ { "enable" : true } ],
     //   object_id: "player"
     // }
-    let enable_boundaries = []
-    let disable_boundaries = []
     let show_billboards = []
     let hide_billboards = []
     state.world.scripts.forEach( script => {
@@ -96,14 +94,7 @@ function f_State(state, user_input, time) {
 
         // If all matching signals were fired, then go ahead and execute the command.
         if (matching_signals.length == required_signals.length) {
-            if (script.command.command_type == "boundary") {
-                // Toggle boundary setting
-                if (script.command.enable_boundary) {
-                    enable_boundaries.push(script.command.boundary_id)
-                } else {
-                    disable_boundaries.push(script.command.boundary_id)
-                }
-            } else if (script.command.command_type == "toggle_billboard") {
+            if (script.command.command_type == "toggle_billboard") {
                 let hidden = script.command.hidden || false
                 if (hidden) {
                     hide_billboards.push(script.command.billboard_id)
@@ -132,16 +123,7 @@ function f_State(state, user_input, time) {
         return new_billboard
     })
 
-    // Toggle boundaries
-    new_state.world.map.boundaries = state.world.map.boundaries.map( boundary => {
-        let new_boundary = {...boundary}
-        if (enable_boundaries.includes(boundary.id)) {
-            new_boundary.enabled = true
-        } else if (disable_boundaries.includes(boundary.id)) {
-            new_boundary.enabled = false
-        }
-        return new_boundary
-    })
+    new_state.world.map.boundaries = f_Boundaries(state.world.map.boundaries, commands)
 
     new_state.requested_directions = f_Directions(new_state.frame_num, state.world.map, new_state.user_input, state.world.actors, new_state.directors)
     new_state.system_directions = f_SystemDirections(new_state.frame_num, state.world.map, state.resources, new_state.user_input, state.world.actors, state.world.actors_touching, new_state.directors, new_state.requested_directions)

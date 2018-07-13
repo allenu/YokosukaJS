@@ -12,10 +12,10 @@ TODOs:
         - [ ] allow a separate "commands:" field if there is more than one
         - [ ] sender_id should be set for all commands...
 
-    - [ ] DESIGN BUG: currently, it's not possible to run a given script multiple times if the criteria matches multiple signals.
+    - [x] DESIGN BUG: currently, it's not possible to run a given script multiple times if the criteria matches multiple signals.
         - i.e. if two actors send the "disable_sender" signal on a frame, it will only get called once, on the first actor that
           matches the criteria.
-        - [ ] Make it so that each signal is tested against all scripts. That is, have an outer loop that goes through all signals
+        - [x] Make it so that each signal is tested against all scripts. That is, have an outer loop that goes through all signals
               and an inner loop that matches against scripts, instead of what we have now (an outer loop that goes through all
               scripts and an inner loop that matches the *first* signal).
               - This gets super complicated, however, if we have multiple signal predicates on a script... if a script depends on

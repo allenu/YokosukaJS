@@ -26,3 +26,19 @@ function f_ActorsTouching(actors) {
     return actors_touching
 }
 
+function f_Boundaries(boundaries, commands) {
+    let new_boundaries = boundaries.map( boundary => {
+        let new_boundary = {...boundary}
+
+        commands.forEach( command => {
+            if (command.target == "boundary" && command.boundary_id == boundary.id) {
+                new_boundary.enabled = command.enable_boundary || false
+            }
+        })
+
+        return new_boundary
+    })
+
+    return new_boundaries
+}
+
