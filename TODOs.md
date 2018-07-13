@@ -11,6 +11,7 @@ TODOs:
     - [ ] support multiple commands in scripts
         - [ ] allow a separate "commands:" field if there is more than one
         - [ ] sender_id should be set for all commands...
+            - [ ] Or should it ... ??
 
     - [x] DESIGN BUG: currently, it's not possible to run a given script multiple times if the criteria matches multiple signals.
         - i.e. if two actors send the "disable_sender" signal on a frame, it will only get called once, on the first actor that
@@ -41,7 +42,7 @@ TODOs:
                   sound effects for each actor.
                 - only shake ground once even if multiple "hit the ground" signals are sent by multiple actors
 
-    - [ ] Clean up the common code at start of f_State()
+    - [x] Clean up the common code at start of f_State()
     - [ ] separate actor position from actor animation state frames etc. the physics system is separate.
 
     - [ ] Move script code outside of f_State
@@ -50,6 +51,9 @@ TODOs:
         - Triggers that fire are all in variants, as well as scripts that have executed over time.
 
 - [ ] Improvements
+    - [ ] add web audio
+        - [ ] On hurt animation
+
     - [ ] Add text display commands
     - [ ] Add simple transition animations (commands)
         - [ ] Enable/Disable a billboard
@@ -64,7 +68,6 @@ TODOs:
         - [ ] User passes a line
         - [ ] User dies
         - [ ] Run script command to transition to another screen or display text and pause game state (?)
-    - [ ] add web audio
     - [ ] add "reset" button to demo
     - [ ] actors should be dictionary and not array
     - [ ] Generalize the properties in the animation frames
