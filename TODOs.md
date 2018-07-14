@@ -9,7 +9,7 @@ TODOs:
         - [ ] overhead example
 
     - [ ] support multiple commands in scripts
-        - [ ] allow a separate "commands:" field if there is more than one
+        - [x] allow a separate "commands:" field if there is more than one
         - [ ] sender_id should be set for all commands...
             - [ ] Or should it ... ??
 

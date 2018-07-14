@@ -12,6 +12,7 @@ map:
 
 billboards:
     - filename: images/rivercity-school.gif
+      id: backdrop
       position:
         x: 0
         y: 0

@@ -40,7 +40,7 @@ function StartGame() {
             directors: directors,
             requested_directions: [],
             system_directions: [],
-            signals: [],
+            signals: ["initialized"], // A signal on the first frame
             user_input: {},
             triggers_fired: [],
             scripts_fired: [],
@@ -155,6 +155,8 @@ function PlayNote() {
             time: g_audio_time + 0.3
         },
     ]
-    g_synthesizer = f_next_synthesizer_state(g_synthesizer, synth_commands)
+    if (g_synthesizer != null) {
+        g_synthesizer = f_next_synthesizer_state(g_synthesizer, synth_commands)
+    }
 }
 

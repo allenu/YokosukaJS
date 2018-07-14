@@ -54,15 +54,30 @@ function f_State(state, user_input, time) {
     let one_time_scripts = scripts_to_execute.filter( script => script.signals != null || !script.signal.multimatch )
     let multimatch_scripts = scripts_to_execute.filter( script => script.signals == null && script.signal.multimatch )
 
-    // TODO: handle multiple commands and concat them all
-    let one_time_commands = one_time_scripts.map(script => script.command)
+    let one_time_commands = one_time_scripts.map(script => {
+        if (script.commands != null) {
+            return script.commands
+        } else {
+            return [script.command]
+        }
+    })
+    one_time_commands = [].concat(...one_time_commands) // flatten the array of arrays
+
     let multimatch_commands = []
     signals_fired.forEach( signal => {
         multimatch_scripts.forEach( script => {
             if (script.signal.id == signal.id && (script.signal.sender_type == null || script.signal.sender_type == signal.sender_type)) {
+                let script_commands = []
+                if (script.commands != null) {
+                    script_commands = script.commands
+                } else {
+                    script_commands = [script.command]
+                }
                 // TODO: handle multiple commands per script
-                let command = { ...script.command, sender_id: signal.sender_id }
-                multimatch_commands.push(command)
+                let commands = script_commands.map( script_command => {
+                    return { ...script_command, sender_id: signal.sender_id }
+                })
+                multimatch_commands = [].concat(commands)
             }
         })
     })
