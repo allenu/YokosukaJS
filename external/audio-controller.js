@@ -51,5 +51,6 @@ function SetupAudio() {
 function TearDownAudio() {
     g_audioContext.close()
     g_audioContext = null
+    g_synthesizer = null
 }
 

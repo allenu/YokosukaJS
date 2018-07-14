@@ -55,6 +55,8 @@ TODOs:
         - [ ] On hurt animation
 
     - [ ] Add text display commands
+        - [ ] https://www.w3schools.com/graphics/canvas_text.asp
+        - [ ] add a border https://www.w3schools.com/tags/canvas_fillrect.asp
     - [ ] Add simple transition animations (commands)
         - [ ] Enable/Disable a billboard
         - [ ] Fade in/fade out a billboard
