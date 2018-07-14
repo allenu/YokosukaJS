@@ -93,7 +93,7 @@ function PlayNote() {
         attack_gain: 1.0,
         decay_time: 0.1,
         sustain_gain: 0.8,
-        release_time: 0.5,
+        release_time: 0.20,
     }
 
     let noise = {
@@ -116,13 +116,13 @@ function PlayNote() {
         {
             action_type: kSynthesizerAction_ReleaseTone,
             channel: 0,
-            time: g_audio_time + 0.2
+            time: g_audio_time + 0.15
         },
         {
             action_type: kSynthesizerAction_PlayTone,
             channel: 1,
             instrument: square,
-            freq: 140,
+            freq: 180,
             time: g_audio_time
         },
         {
@@ -134,13 +134,25 @@ function PlayNote() {
             action_type: kSynthesizerAction_PlayTone,
             channel: 2,
             instrument: square,
-            freq: 70,
+            freq: 60,
             time: g_audio_time + 0.1
         },
         {
             action_type: kSynthesizerAction_ReleaseTone,
             channel: 2,
             time: g_audio_time + 0.4
+        },
+        {
+            action_type: kSynthesizerAction_PlayTone,
+            channel: 3,
+            instrument: square,
+            freq: 120,
+            time: g_audio_time + 0.2
+        },
+        {
+            action_type: kSynthesizerAction_ReleaseTone,
+            channel: 3,
+            time: g_audio_time + 0.3
         },
     ]
     g_synthesizer = f_next_synthesizer_state(g_synthesizer, synth_commands)

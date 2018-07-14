@@ -63,22 +63,24 @@ states:
         health_hit: 1
         signals: sfx_oof
       - sprite: Hurt 2
+      - sprite: Hurt 2
+      - sprite: Hurt 2
       - sprite: Hurt 3
-      - sprite: Hurt 4
-      - sprite: Hurt 5
-      - sprite: Hurt 4
-      - sprite: Hurt 5
-      - sprite: Hurt 4
-      - sprite: Hurt 5
-      - sprite: Hurt 4
-      - sprite: Hurt 5
     uninterruptible: true
   dying:
     frames:
       - sprite: Hurt 4
       - sprite: Hurt 4
+      - sprite: Hurt 5
+      - sprite: Hurt 5
       - sprite: Hurt 4
       - sprite: Hurt 4
+      - sprite: Hurt 5
+      - sprite: Hurt 5
+      - sprite: Hurt 4
+      - sprite: Hurt 4
+      - sprite: Hurt 5
+      - sprite: Hurt 5
         signals: disable_sender Died
     uninterruptible: true
 
